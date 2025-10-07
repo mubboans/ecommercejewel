@@ -173,13 +173,13 @@ export const SOCIAL_LINKS = {
 // Contact information
 export const CONTACT_INFO = {
   EMAIL: 'support@ecommerce.com',
-  PHONE: '+91-1234567890',
+  PHONE: '+91-9833259443 / 9004811338',
   ADDRESS: '123 Main Street, City, State, 12345',
 } as const;
 
 // SEO defaults
 export const SEO = {
-  SITE_NAME: 'Artisan Jewels',
+  SITE_NAME: 'DILARAA',
   SITE_DESCRIPTION: 'Handcrafted jewelry made with love - Unique, beautiful, and personalized pieces for every occasion',
   SITE_KEYWORDS: 'handmade jewelry, artisan jewelry, custom jewelry, rings, necklaces, earrings, bracelets, handcrafted accessories',
   DEFAULT_IMAGE: '/images/og-image.jpg',
