@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Trash2, Upload } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,6 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 
 /* ---------- empty product skeleton ---------- */
 const emptyProduct: Product = {
@@ -45,14 +44,12 @@ interface Product {
   stockCount?: number | null;
 }
 
-export default function AdminProductsPage({product}: any) {
+export default function AdminProductsPage() {
   const router = useRouter();
   const [data, setData] = useState<typeof emptyProduct>(emptyProduct);
   const [loading, setLoading] = useState(false);
 
   /* ---------- helpers ---------- */
-  const setImages = (urls: string[]) =>
-    setData((d) => ({ ...d, images: urls }));
   const addFeature = () =>
     setData((d) => ({ ...d, features: [...d.features || [], ""] }));
   const updateFeature = (idx: number, val: string) =>

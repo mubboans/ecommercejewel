@@ -2,7 +2,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { signUpSchema } from '@/lib/validations';
-import connectDB from '@/lib/db/mongodb';
 import User from '@/models/User';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '@/constants';
 

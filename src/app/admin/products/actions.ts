@@ -1,9 +1,11 @@
 "use server";
 
+import connectDB from "@/lib/db/mongodb";
 import Product, { type IProduct } from "@/models/Product";
 import { revalidatePath } from "next/cache";
 
 export async function getProducts(id?: string) {
+    await connectDB();
     if (id) return Product.findById(id).lean(); // lean() keeps _id :)
     return Product.find().lean(); // lean() keeps _id :)
 }

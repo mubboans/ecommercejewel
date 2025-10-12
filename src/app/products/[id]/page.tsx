@@ -1,132 +1,224 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useParams } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { MainLayout } from '@/components/layout/main-layout';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Star, ShoppingCart, Heart, Share2, ArrowLeft, Plus, Minus } from 'lucide-react';
-import { CURRENCY } from '@/constants';
-import { useCart, cartHelpers } from '@/components/providers/cart-provider';
+import { useState, useMemo, useCallback } from "react";
+import { useParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { MainLayout } from "@/components/layout/main-layout";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Star,
+  ShoppingCart,
+  Heart,
+  Share2,
+  ArrowLeft,
+  Plus,
+  Minus,
+  Check,
+} from "lucide-react";
+import { CURRENCY } from "@/constants";
+import { useCart, cartHelpers } from "@/components/providers/cart-provider";
 
-// Mock product data (in real app, this would come from API)
-const products = {
-  '1': {
-    id: '1',
-    name: 'Bohemian Rose Gold Earrings',
+interface ProductSpecifications {
+  [key: string]: string;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  originalPrice: number;
+  images: string[];
+  rating: number;
+  reviews: number;
+  badge: string;
+  category: string;
+  description: string;
+  features: string[];
+  specifications: ProductSpecifications;
+  inStock: boolean;
+  stockCount: number;
+}
+
+interface ProductsData {
+  [key: string]: Product;
+}
+
+// Mock product data
+const products: ProductsData = {
+  "1": {
+    id: "1",
+    name: "Bohemian Rose Gold Earrings",
     price: 1299,
     originalPrice: 1599,
     images: [
-      'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=600&fit=crop&crop=center',
-      'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=600&h=600&fit=crop&crop=center',
-      'https://images.unsplash.com/photo-1506630448388-4e683c67ddb0?w=600&h=600&fit=crop&crop=center',
+      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=600&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=600&h=600&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1506630448388-4e683c67ddb0?w=600&h=600&fit=crop&crop=center",
     ],
     rating: 4.9,
     reviews: 156,
-    badge: 'Best Seller',
-    category: 'Earrings',
-    description: 'Beautiful handcrafted rose gold plated earrings with bohemian design. These elegant earrings feature intricate detailing and are perfect for both casual and formal occasions.',
+    badge: "Best Seller",
+    category: "Earrings",
+    description:
+      "Beautiful handcrafted rose gold plated earrings with bohemian design. These elegant earrings feature intricate detailing and are perfect for both casual and formal occasions.",
     features: [
-      'Rose gold plated finish',
-      'Hypoallergenic materials',
-      'Lightweight and comfortable',
-      'Handcrafted by skilled artisans',
-      'Comes with elegant gift box'
+      "Rose gold plated finish",
+      "Hypoallergenic materials",
+      "Lightweight and comfortable",
+      "Handcrafted by skilled artisans",
+      "Comes with elegant gift box",
     ],
     specifications: {
-      'Material': 'Rose Gold Plated Brass',
-      'Size': '2.5cm x 1.5cm',
-      'Weight': '3.2g per earring',
-      'Style': 'Bohemian',
-      'Closure': 'Hook back',
+      Material: "Rose Gold Plated Brass",
+      Size: "2.5cm x 1.5cm",
+      Weight: "3.2g per earring",
+      Style: "Bohemian",
+      Closure: "Hook back",
     },
     inStock: true,
-    stockCount: 15
+    stockCount: 15,
   },
-  '2': {
-    id: '2',
-    name: 'Vintage Pearl Necklace',
+  "2": {
+    id: "2",
+    name: "Vintage Pearl Necklace",
     price: 2499,
     originalPrice: 2999,
     images: [
-      'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=600&fit=crop&crop=center',
-      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=600&fit=crop&crop=center',
+      "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=600&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=600&fit=crop&crop=center",
     ],
     rating: 4.8,
     reviews: 203,
-    badge: 'Popular',
-    category: 'Necklaces',
-    description: 'Elegant vintage-inspired pearl necklace that adds sophistication to any outfit. Made with genuine freshwater pearls and premium chain.',
+    badge: "Popular",
+    category: "Necklaces",
+    description:
+      "Elegant vintage-inspired pearl necklace that adds sophistication to any outfit. Made with genuine freshwater pearls and premium chain.",
     features: [
-      'Genuine freshwater pearls',
-      'Sterling silver chain',
-      'Adjustable length',
-      'Vintage-inspired design',
-      'Perfect for special occasions'
+      "Genuine freshwater pearls",
+      "Sterling silver chain",
+      "Adjustable length",
+      "Vintage-inspired design",
+      "Perfect for special occasions",
     ],
     specifications: {
-      'Material': 'Sterling Silver, Freshwater Pearls',
-      'Length': '18-20 inches (adjustable)',
-      'Pearl Size': '6-8mm',
-      'Style': 'Vintage',
-      'Closure': 'Lobster clasp',
+      Material: "Sterling Silver, Freshwater Pearls",
+      Length: "18-20 inches (adjustable)",
+      "Pearl Size": "6-8mm",
+      Style: "Vintage",
+      Closure: "Lobster clasp",
     },
     inStock: true,
-    stockCount: 8
+    stockCount: 8,
   },
-  '3': {
-    id: '3',
-    name: 'Handcrafted Silver Ring',
+  "3": {
+    id: "3",
+    name: "Handcrafted Silver Ring",
     price: 899,
     originalPrice: 1199,
     images: [
-      'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=600&fit=crop&crop=center',
-      'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=600&h=600&fit=crop&crop=center',
+      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=600&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=600&h=600&fit=crop&crop=center",
     ],
     rating: 4.7,
     reviews: 89,
-    badge: 'New',
-    category: 'Rings',
-    description: 'Beautifully handcrafted sterling silver ring with intricate patterns. This unique piece showcases traditional craftsmanship with a modern twist.',
+    badge: "New",
+    category: "Rings",
+    description:
+      "Beautifully handcrafted sterling silver ring with intricate patterns. This unique piece showcases traditional craftsmanship with a modern twist.",
     features: [
-      'Sterling silver construction',
-      'Unique handcrafted pattern',
-      'Available in multiple sizes',
-      'Tarnish resistant',
-      'Lifetime craftsmanship guarantee'
+      "Sterling silver construction",
+      "Unique handcrafted pattern",
+      "Available in multiple sizes",
+      "Tarnish resistant",
+      "Lifetime craftsmanship guarantee",
     ],
     specifications: {
-      'Material': 'Sterling Silver (925)',
-      'Width': '8mm',
-      'Available Sizes': '5, 6, 7, 8, 9',
-      'Style': 'Contemporary',
-      'Finish': 'Polished',
+      Material: "Sterling Silver (925)",
+      Width: "8mm",
+      "Available Sizes": "5, 6, 7, 8, 9",
+      Style: "Contemporary",
+      Finish: "Polished",
     },
     inStock: true,
-    stockCount: 12
-  }
+    stockCount: 12,
+  },
 };
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const productId = params.id as string;
-  const product = products[productId as keyof typeof products];
-  
+  const productId = params?.id as string;
+  const product = products[productId];
+
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState('');
-  
+  const [selectedSize] = useState("");
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+
   const { dispatch } = useCart();
 
+  // Memoized calculations
+  const totalPrice = useMemo(() => {
+    return product ? product.price * quantity : 0;
+  }, [product, quantity]);
+
+  const discount = useMemo(() => {
+    if (!product) return 0;
+    return product.originalPrice - product.price;
+  }, [product]);
+
+  const hasDiscount = useMemo(() => {
+    if (!product) return false;
+    return product.originalPrice > product.price;
+  }, [product]);
+
+  // Callbacks
+  const handleAddToCart = useCallback(() => {
+    if (!product) return;
+
+    setIsAddingToCart(true);
+
+    const cartItem = {
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images[0],
+      quantity: quantity,
+    };
+
+    cartHelpers.addItem(dispatch, cartItem);
+
+    // Simulate async operation
+    setTimeout(() => {
+      setIsAddingToCart(false);
+      alert(`Added ${quantity} ${product.name} to cart!`);
+    }, 300);
+  }, [product, quantity, dispatch]);
+
+  const incrementQuantity = useCallback(() => {
+    if (!product) return;
+    setQuantity((prev) => (prev < product.stockCount ? prev + 1 : prev));
+  }, [product]);
+
+  const decrementQuantity = useCallback(() => {
+    setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  }, []);
+
+  const handleImageSelect = useCallback((index: number) => {
+    setSelectedImageIndex(index);
+  }, []);
+
+  // Product not found
   if (!product) {
     return (
       <MainLayout>
         <div className="container mx-auto px-4 py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-          <p className="text-muted-foreground mb-8">The product you&apos;re looking for doesn&apos;t exist.</p>
+          <p className="text-muted-foreground mb-8">
+            The product you&apos;re looking for doesn&apos;t exist.
+          </p>
           <Button asChild>
             <Link href="/products">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -138,84 +230,88 @@ export default function ProductDetailPage() {
     );
   }
 
-  const handleAddToCart = () => {
-    const cartItem = {
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.images[0],
-      quantity: quantity,
-    };
-    
-    cartHelpers.addItem(dispatch, cartItem);
-    
-    // Show success message (you could use a toast here)
-    alert(`Added ${quantity} ${product.name} to cart!`);
-  };
-
-  const incrementQuantity = () => {
-    if (quantity < product.stockCount) {
-      setQuantity(quantity + 1);
-    }
-  };
-
-  const decrementQuantity = () => {
-    if (quantity > 1) {
-      setQuantity(quantity - 1);
-    }
-  };
+  const isAddToCartDisabled =
+    !product.inStock ||
+    (product.category === "Rings" && !selectedSize) ||
+    isAddingToCart;
 
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-8">
-          <Link href="/" className="hover:text-foreground">Home</Link>
+        <nav
+          className="flex items-center space-x-2 text-sm text-muted-foreground mb-8 overflow-x-auto whitespace-nowrap pb-2"
+          aria-label="Breadcrumb"
+        >
+          <Link href="/" className="hover:text-foreground transition-colors">
+            Home
+          </Link>
           <span>/</span>
-          <Link href="/products" className="hover:text-foreground">Products</Link>
+          <Link
+            href="/products"
+            className="hover:text-foreground transition-colors"
+          >
+            Products
+          </Link>
           <span>/</span>
-          <Link href={`/products?category=${product.category}`} className="hover:text-foreground">{product.category}</Link>
+          <Link
+            href={`/products?category=${product.category}`}
+            className="hover:text-foreground transition-colors"
+          >
+            {product.category}
+          </Link>
           <span>/</span>
-          <span className="text-foreground">{product.name}</span>
-        </div>
+          <span
+            className="text-foreground truncate max-w-[200px]"
+            title={product.name}
+          >
+            {product.name}
+          </span>
+        </nav>
 
-        <div className="grid lg:grid-cols-2 gap-12">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="relative aspect-square rounded-lg overflow-hidden">
+            <div className="relative aspect-square rounded-lg overflow-hidden bg-muted">
               <Image
                 src={product.images[selectedImageIndex]}
-                alt={product.name}
-                width={600}
-                height={600}
-                className="w-full h-full object-cover"
+                alt={`${product.name} - Image ${selectedImageIndex + 1}`}
+                fill
+                className="object-cover"
                 priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
               />
               {product.badge && (
-                <Badge className="absolute top-4 left-4">
+                <Badge className="absolute top-4 left-4 shadow-md">
                   {product.badge}
                 </Badge>
               )}
             </div>
-            
+
             {/* Image Thumbnails */}
             {product.images.length > 1 && (
-              <div className="flex space-x-2">
+              <div className="flex gap-2 overflow-x-auto pb-2">
                 {product.images.map((image, index) => (
                   <button
-                    key={index}
-                    onClick={() => setSelectedImageIndex(index)}
-                    className={`relative w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                      selectedImageIndex === index ? 'border-primary' : 'border-transparent'
+                    key={`thumb-${index}`}
+                    onClick={() => handleImageSelect(index)}
+                    className={`relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                      selectedImageIndex === index
+                        ? "border-primary ring-2 ring-primary/20"
+                        : "border-border hover:border-primary/50"
                     }`}
+                    aria-label={`View image ${index + 1}`}
                   >
                     <Image
                       src={image}
-                      alt={`${product.name} ${index + 1}`}
-                      width={80}
-                      height={80}
-                      className="w-full h-full object-cover"
+                      alt={`${product.name} thumbnail ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
                     />
+                    {selectedImageIndex === index && (
+                      <div className="absolute inset-0 bg-primary/10" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -225,20 +321,27 @@ export default function ProductDetailPage() {
           {/* Product Details */}
           <div className="space-y-6">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">{product.category}</p>
-              <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
-              
+              <p className="text-sm text-muted-foreground mb-1">
+                {product.category}
+              </p>
+              <h1 className="text-2xl sm:text-3xl font-bold mb-4 leading-tight">
+                {product.name}
+              </h1>
+
               {/* Rating */}
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star 
-                      key={i} 
+              <div className="flex items-center flex-wrap gap-2 mb-4">
+                <div
+                  className="flex"
+                  aria-label={`Rating: ${product.rating} out of 5 stars`}
+                >
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <Star
+                      key={`star-${i}`}
                       className={`h-5 w-5 ${
-                        i < Math.floor(product.rating) 
-                          ? 'fill-yellow-400 text-yellow-400' 
-                          : 'text-gray-300'
-                      }`} 
+                        i < Math.floor(product.rating)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
+                      }`}
                     />
                   ))}
                 </div>
@@ -248,17 +351,20 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Price */}
-              <div className="flex items-center space-x-3 mb-6">
-                <span className="text-3xl font-bold">
-                  {CURRENCY.SYMBOL}{product.price.toLocaleString()}
+              <div className="flex items-center flex-wrap gap-3 mb-6">
+                <span className="text-2xl sm:text-3xl font-bold">
+                  {CURRENCY.SYMBOL}
+                  {product.price.toLocaleString()}
                 </span>
-                {product.originalPrice > product.price && (
+                {hasDiscount && (
                   <>
                     <span className="text-lg text-muted-foreground line-through">
-                      {CURRENCY.SYMBOL}{product.originalPrice.toLocaleString()}
+                      {CURRENCY.SYMBOL}
+                      {product.originalPrice.toLocaleString()}
                     </span>
-                    <Badge variant="destructive">
-                      Save {CURRENCY.SYMBOL}{product.originalPrice - product.price}
+                    <Badge variant="destructive" className="font-semibold">
+                      Save {CURRENCY.SYMBOL}
+                      {discount.toLocaleString()}
                     </Badge>
                   </>
                 )}
@@ -268,24 +374,25 @@ export default function ProductDetailPage() {
             {/* Description */}
             <div>
               <p className="text-muted-foreground leading-relaxed">
-                {product?.description}
+                {product.description}
               </p>
             </div>
 
-            {/* Size Selection (for rings) */}
-            {/* {product.category === 'Rings' && product?.specifications['Available Sizes'] && (
+            {/* Size Selection (for rings) - Preserved commented code */}
+            {/* {product.category === 'Rings' && product.specifications?.['Available Sizes'] && (
               <div>
                 <h3 className="font-semibold mb-3">Size</h3>
-                <div className="flex space-x-2">
-                  {product?.specifications?['Available Sizes']?.split(', ')?.map((size) => (
+                <div className="flex flex-wrap gap-2">
+                  {product.specifications['Available Sizes'].split(', ').map((size) => (
                     <button
                       key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`w-10 h-10 rounded-full border-2 ${
+                      onClick={() => handleSizeSelect(size)}
+                      className={`w-10 h-10 rounded-full border-2 transition-all ${
                         selectedSize === size 
                           ? 'border-primary bg-primary text-primary-foreground' 
                           : 'border-border hover:border-primary'
                       }`}
+                      aria-pressed={selectedSize === size}
                     >
                       {size}
                     </button>
@@ -297,26 +404,30 @@ export default function ProductDetailPage() {
             {/* Quantity */}
             <div>
               <h3 className="font-semibold mb-3">Quantity</h3>
-              <div className="flex items-center space-x-3">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={decrementQuantity}
-                  disabled={quantity <= 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="text-lg font-semibold min-w-[3rem] text-center">
-                  {quantity}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={incrementQuantity}
-                  disabled={quantity >= product.stockCount}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
+              <div className="flex items-center flex-wrap gap-3">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={decrementQuantity}
+                    disabled={quantity <= 1}
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="text-lg font-semibold min-w-[3rem] text-center">
+                    {quantity}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={incrementQuantity}
+                    disabled={quantity >= product.stockCount}
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
                 <span className="text-sm text-muted-foreground">
                   ({product.stockCount} in stock)
                 </span>
@@ -325,17 +436,27 @@ export default function ProductDetailPage() {
 
             {/* Actions */}
             <div className="space-y-4">
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 size="lg"
                 onClick={handleAddToCart}
-                disabled={!product.inStock || (product.category === 'Rings' && !selectedSize)}
+                disabled={isAddToCartDisabled}
               >
-                <ShoppingCart className="w-5 h-5 mr-2" />
-                Add to Cart - {CURRENCY.SYMBOL}{(product.price * quantity).toLocaleString()}
+                {isAddingToCart ? (
+                  <>
+                    <div className="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-5 h-5 mr-2" />
+                    Add to Cart - {CURRENCY.SYMBOL}
+                    {totalPrice.toLocaleString()}
+                  </>
+                )}
               </Button>
-              
-              <div className="flex space-x-2">
+
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button variant="outline" className="flex-1">
                   <Heart className="w-4 h-4 mr-2" />
                   Add to Wishlist
@@ -348,26 +469,38 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Stock Status */}
-            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-800 text-sm">
-                ✅ In stock and ready to ship
-              </p>
-            </div>
+            {product.inStock ? (
+              <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-lg">
+                <p className="text-green-800 dark:text-green-400 text-sm flex items-center">
+                  <Check className="w-4 h-4 mr-2" />
+                  In stock and ready to ship
+                </p>
+              </div>
+            ) : (
+              <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg">
+                <p className="text-red-800 dark:text-red-400 text-sm">
+                  ⚠️ Out of stock
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Product Details Tabs */}
-        <div className="mt-16">
-          <div className="grid md:grid-cols-2 gap-8">
+        <div className="mt-12 sm:mt-16">
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
             {/* Features */}
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-xl font-semibold mb-4">Features</h3>
                 <ul className="space-y-2">
                   {product.features.map((feature, index) => (
-                    <li key={index} className="flex items-center space-x-2">
-                      <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></span>
-                      <span className="text-sm">{feature}</span>
+                    <li
+                      key={`feature-${index}`}
+                      className="flex items-start gap-3"
+                    >
+                      <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2" />
+                      <span className="text-sm leading-relaxed">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -379,12 +512,19 @@ export default function ProductDetailPage() {
               <CardContent className="p-6">
                 <h3 className="text-xl font-semibold mb-4">Specifications</h3>
                 <div className="space-y-3">
-                  {Object.entries(product.specifications).map(([key, value]) => (
-                    <div key={key} className="flex justify-between py-2 border-b border-border last:border-b-0">
-                      <span className="font-medium text-sm">{key}</span>
-                      <span className="text-sm text-muted-foreground">{value}</span>
-                    </div>
-                  ))}
+                  {Object.entries(product.specifications).map(
+                    ([key, value]) => (
+                      <div
+                        key={`spec-${key}`}
+                        className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-2 py-2 border-b border-border last:border-b-0"
+                      >
+                        <span className="font-medium text-sm">{key}</span>
+                        <span className="text-sm text-muted-foreground sm:text-right">
+                          {value}
+                        </span>
+                      </div>
+                    )
+                  )}
                 </div>
               </CardContent>
             </Card>

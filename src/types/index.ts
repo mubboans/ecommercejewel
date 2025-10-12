@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { Document } from 'mongoose';
-
 export interface IUser extends Document {
   _id: string;
   name: string;
@@ -11,7 +11,6 @@ export interface IUser extends Document {
   dateOfBirth?: Date;
   gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
   avatar?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   addresses?: Array<any>;
   isEmailVerified?: boolean;
   isPhoneVerified?: boolean;
@@ -82,6 +81,8 @@ export type OrderStatus =
   | 'processing' 
   | 'shipped' 
   | 'delivered' 
+  | 'returned'
+  | 'refunded'
   | 'cancelled';
 
 export type PaymentStatus = 
@@ -91,7 +92,7 @@ export type PaymentStatus =
   | 'refunded';
 
 export interface IOrder extends Document {
-  _id: string;
+//   _id: string;
   userId: string;
   items: IOrderItem[];
   subtotal: number;
@@ -117,6 +118,22 @@ export interface IOrder extends Document {
   deliveredAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+  orderNumber: string;
+  shippedAt?: Date;
+  paidAt?: Date;
+  refundedAt?: Date;
+  customerInfo: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  discount: number;
+  discountCode?: string;
+  taxRate: number;
+  shippingMethod: string;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+
 }
 
 export interface IAnalytics {

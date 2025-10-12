@@ -39,15 +39,6 @@ export default function NewProductPage() {
   const [loading, setLoading] = useState(false);
 
   /* helpers */
-  const addFeature = () => setData({ ...data, features: [...data.features, ""] });
-  const removeFeature = (idx: number) =>
-    setData({ ...data, features: data.features.filter((_, i) => i !== idx) });
-  const updateFeature = (idx: number, val: string) => {
-    const copy = [...data.features];
-    copy[idx] = val;
-    setData({ ...data, features: copy });
-  };
-
   const handleSave = async () => {
     setLoading(true);
     try {
@@ -281,13 +272,13 @@ export default function NewProductPage() {
                 {Object.entries(data?.specifications || {}).map(([k, v]) => (
                   <div key={k} className="flex items-center gap-2">
                     <Badge variant="secondary">{k}</Badge>
-                    <span className="text-sm">{v}</span>
+                    <span className="text-sm">{String(v)}</span>
                     <Button
                       size="icon"
                       variant="ghost"
                       onClick={() => {
                         const copy = { ...data.specifications };
-                        delete copy[k];
+                        delete (copy as Record<string, any>)[k];
                         setData({ ...data, specifications: copy });
                       }}
                     >

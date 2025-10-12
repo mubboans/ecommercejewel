@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState } from 'react';
@@ -35,8 +36,8 @@ export default function ForgotPasswordPage() {
       } else {
         setError(data.message || 'An error occurred. Please try again.');
       }
-    } catch (error) {
-      setError('An error occurred. Please try again.');
+    } catch (err: any) {
+      setError('An error occurred. Please try again. ' + err?.message);
     } finally {
       setIsLoading(false);
     }

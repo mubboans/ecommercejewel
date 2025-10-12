@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState } from 'react';
@@ -57,8 +58,6 @@ export default function SignUpPage() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-
       if (response.ok) {
         // Auto sign in after successful registration
         const result = await signIn('credentials', {
@@ -74,11 +73,9 @@ export default function SignUpPage() {
           // If auto sign-in fails, redirect to sign-in page
           router.push('/auth/signin?message=Account created successfully. Please sign in.');
         }
-      } else {
-        setError(data.message || 'An error occurred during registration');
       }
-    } catch (error) {
-      setError('An error occurred. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'An error occurred. Please try again. ' + err?.message);
     } finally {
       setIsLoading(false);
     }

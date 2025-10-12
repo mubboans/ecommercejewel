@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import * as React from "react";
@@ -17,7 +18,6 @@ import {
   ArrowUpDown,
   ChevronDown,
   MoreHorizontal,
-  Plus,
   Pencil,
   Trash2,
   Eye,
@@ -45,7 +45,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { IProduct } from "@/models/Product";
-import { useRouter } from "next/router";
 import Link from "next/link";
 
 // Define the columns for Product data

@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -11,7 +12,30 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SEO } from '@/constants';
 
-export default function SignInPage() {
+// Loading component for Suspense fallback
+function SignInLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex items-center justify-center mb-4">
+            <ShoppingBag className="h-8 w-8 text-primary mr-2" />
+            <span className="text-2xl font-bold">{SEO.SITE_NAME}</span>
+          </div>
+          <CardTitle className="text-2xl">Welcome back</CardTitle>
+          <CardDescription>Loading...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center py-8">
+            <div className="animate-pulse h-6 w-24 bg-gray-200 rounded"></div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function SignInForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -42,8 +66,8 @@ export default function SignInPage() {
         router.push(callbackUrl);
         router.refresh();
       }
-    } catch (error) {
-      setError('An error occurred. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -130,7 +154,7 @@ export default function SignInPage() {
           </form>
           
           <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">Don&apos;t have an account? </span>
+            Don&apos;t have an account?{' '}
             <Link 
               href="/auth/signup" 
               className="text-primary hover:underline font-medium"
@@ -138,17 +162,17 @@ export default function SignInPage() {
               Sign up
             </Link>
           </div>
-          
-          <div className="mt-4 text-center">
-            <Link 
-              href="/" 
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              ← Back to Home
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<SignInLoading />}>
+      <SignInForm />
+    </Suspense>
   );
 }

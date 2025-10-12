@@ -40,8 +40,6 @@ const EditForm = ({ product }: { product: any }) => {
   const [loading, setLoading] = useState(false);
 
   /* helpers (same as NewForm) */
-  const addFeature = () =>
-    setData((d) => ({ ...d, features: [...d.features, ""] }));
   const removeFeature = (idx: number) =>
     setData((d) => ({
       ...d,
@@ -276,14 +274,14 @@ const EditForm = ({ product }: { product: any }) => {
                 {Object.entries(data.specifications || {}).map(([k, v]) => (
                   <div key={k} className="flex items-center gap-2">
                     <Badge variant="secondary">{k}</Badge>
-                    <span className="text-sm">{v}</span>
+                    <span className="text-sm">{String(v)}</span>
                     <Button
                       size="icon"
                       variant="ghost"
                       onClick={() => {
                         const copy = { ...(data.specifications || {}) };
-                        if (k && copy[k]) {
-                          delete copy[k];
+                        if (k && (copy as Record<string, any>)[k]) {
+                          delete (copy as Record<string, any>)[k];
                         }
                         setData({ ...data, specifications: copy });
                       }}

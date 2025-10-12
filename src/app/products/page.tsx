@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, ShoppingBag, ShoppingCart, Eye } from 'lucide-react';
+import { Star, ShoppingCart, Eye } from 'lucide-react';
 import { CURRENCY } from '@/constants';
 import { useCart, cartHelpers } from '@/components/providers/cart-provider';
 import { cn } from '@/lib/utils';

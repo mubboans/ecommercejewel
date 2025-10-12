@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, ShoppingBag } from 'lucide-react';
@@ -10,7 +11,30 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SEO } from '@/constants';
 
-export default function ResetPasswordPage() {
+// Loading component for Suspense fallback
+function ResetPasswordLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex items-center justify-center mb-4">
+            <ShoppingBag className="h-8 w-8 text-primary mr-2" />
+            <span className="text-2xl font-bold">{SEO.SITE_NAME}</span>
+          </div>
+          <CardTitle className="text-2xl">Reset Your Password</CardTitle>
+          <CardDescription>Loading...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center py-8">
+            <div className="animate-pulse h-6 w-24 bg-gray-200 rounded"></div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function ResetPasswordForm() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -61,8 +85,8 @@ export default function ResetPasswordPage() {
       } else {
         setError(data.message || 'An error occurred. Please try again.');
       }
-    } catch (error) {
-      setError('An error occurred. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -188,5 +212,14 @@ export default function ResetPasswordPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<ResetPasswordLoading />}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

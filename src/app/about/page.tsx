@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { MainLayout } from '@/components/layout/main-layout';
 import { SEO } from '@/constants';
 
@@ -74,7 +75,7 @@ export default function AboutPage() {
             <div className="text-center bg-muted/30 rounded-lg p-8">
               <h2 className="text-3xl font-bold mb-4">Our Mission</h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                To create beautiful, meaningful jewelry that celebrates life's special moments and 
+                To create beautiful, meaningful jewelry that celebrates life&apos;s special moments and 
                 empowers individuals to express their unique style with confidence and elegance.
               </p>
             </div>
