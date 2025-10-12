@@ -138,7 +138,7 @@ export default function CustomPage() {
           <div className="text-center bg-muted/30 rounded-lg p-8">
             <h2 className="text-2xl font-bold mb-4">Ready to Start Your Custom Project?</h2>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Let's bring your vision to life! Our design team is excited to work with you 
+              Let&apos;s bring your vision to life! Our design team is excited to work with you 
               to create a piece that perfectly captures your style and story.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
