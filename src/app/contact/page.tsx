@@ -15,7 +15,7 @@ export default function ContactPage() {
           <div className="text-center mb-12">
             <h1 className="text-4xl lg:text-5xl font-bold mb-6">Contact Us</h1>
             <p className="text-xl text-muted-foreground">
-              Have questions about our jewelry? We'd love to hear from you!
+              Have questions about our jewelry? We&apos;d love to hear from you!
             </p>
           </div>
 
@@ -81,7 +81,7 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-semibold">Email</h3>
                       <p className="text-muted-foreground">{CONTACT_INFO.EMAIL}</p>
-                      <p className="text-sm text-muted-foreground">We'll respond within 24 hours</p>
+                      <p className="text-sm text-muted-foreground">We&apos;ll respond within 24 hours</p>
                     </div>
                   </div>
                   

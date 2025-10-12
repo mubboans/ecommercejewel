@@ -1,357 +1,220 @@
-// 'use client';
-
-// import { useState } from 'react';
-// import Link from 'next/link';
-// import { useRouter } from 'next/navigation';
-// import { signOut, useSession } from 'next-auth/react';
-// import {
-//   ShoppingCart,
-//   User,
-//   Search,
-//   Menu,
-//   X,
-//   LogOut,
-//   UserCircle,
-//   ShoppingBag,
-//   Settings
-// } from 'lucide-react';
-// import { Button } from '@/components/ui/button';
-// import { Input } from '@/components/ui/input';
-// import {
-//   DropdownMenu,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuSeparator,
-//   DropdownMenuTrigger,
-// } from '@/components/ui/dropdown-menu';
-// import { Badge } from '@/components/ui/badge';
-// import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-// import { ThemeToggle } from '@/components/ui/theme-toggle';
-// import { useCart } from '@/components/providers/cart-provider';
-// import { SEO } from '@/constants';
-
-// export function Header() {
-//   const [isSearchOpen, setIsSearchOpen] = useState(false);
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const { data: session } = useSession();
-//   const { state: cartState } = useCart();
-//   const router = useRouter();
-
-//   const handleSearch = (e: React.FormEvent) => {
-//     e.preventDefault();
-//     if (searchQuery.trim()) {
-//       router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
-//       setSearchQuery('');
-//       setIsSearchOpen(false);
-//     }
-//   };
-
-//   const handleSignOut = async () => {
-//     await signOut({ callbackUrl: '/' });
-//   };
-
-//   const navigation = [
-//     { name: 'Home', href: '/' },
-//     { name: 'Collection', href: '/products' },
-//     { name: 'Custom Orders', href: '/custom' },
-//     { name: 'About', href: '/about' },
-//     { name: 'Contact', href: '/contact' },
-//   ];
-
-//   return (
-//     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-//       <div className="container mx-auto px-4">
-//         <div className="flex h-16 items-center justify-between">
-//           {/* Logo */}
-//           <div className="hidden lg:flex flex-1 items-center space-x-4">
-//             <Link href="/" className="flex items-center space-x-2">
-//               <ShoppingBag className="h-6 w-6 text-primary" />
-//               <span className="font-bold text-xl text-foreground">
-//                 {SEO.SITE_NAME}
-//               </span>
-//             </Link>
-//           </div>
-
-//           {/* Desktop Navigation */}
-//           <nav className="hidden md:flex items-center space-x-3">
-//             {navigation.map((item) => (
-//               <Link
-//                 key={item.name}
-//                 href={item.href}
-//                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-//               >
-//                 {item.name}
-//               </Link>
-//             ))}
-//           </nav>
-
-//           {/* Search Bar */}
-//           {/* <div className="hidden lg:flex flex-1 max-w-md mx-8">
-//             <form onSubmit={handleSearch} className="relative w-full">
-//               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-//               <Input
-//                 type="search"
-//                 placeholder="Search jewelry..."
-//                 value={searchQuery}
-//                 onChange={(e) => setSearchQuery(e.target.value)}
-//                 className="pl-10 pr-4"
-//               />
-//             </form>
-//           </div> */}
-
-//           {/* Right Side Actions */}
-//           <div className="flex items-center space-x-2">
-//             {/* Mobile Search Toggle */}
-//             <Button
-//               variant="ghost"
-//               size="icon"
-//               onClick={() => setIsSearchOpen(!isSearchOpen)}
-//               className="lg:hidden"
-//             >
-//               <Search className="h-5 w-5" />
-//             </Button>
-
-//             {/* Theme Toggle */}
-//             <ThemeToggle />
-
-//             {/* Cart */}
-//             <Link href="/cart">
-//               <Button variant="ghost" size="icon" className="relative">
-//                 <ShoppingCart className="h-5 w-5" />
-//                 {cartState.itemCount > 0 && (
-//                   <Badge
-//                     variant="destructive"
-//                     className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs"
-//                   >
-//                     {cartState.itemCount}
-//                   </Badge>
-//                 )}
-//               </Button>
-//             </Link>
-
-//             {/* User Menu */}
-//             {session ? (
-//               <DropdownMenu>
-//                 <DropdownMenuTrigger asChild>
-//                   <Button variant="ghost" size="icon">
-//                     <UserCircle className="h-5 w-5" />
-//                   </Button>
-//                 </DropdownMenuTrigger>
-//                 <DropdownMenuContent align="end" className="w-48">
-//                   <div className="px-2 py-1.5 text-sm font-medium">
-//                     {session.user.name}
-//                   </div>
-//                   <div className="px-2 pb-2 text-xs text-muted-foreground">
-//                     {session.user.email}
-//                   </div>
-//                   <DropdownMenuSeparator />
-//                   <DropdownMenuItem asChild>
-//                     <Link href="/profile">
-//                       <User className="mr-2 h-4 w-4" />
-//                       Profile
-//                     </Link>
-//                   </DropdownMenuItem>
-//                   <DropdownMenuItem asChild>
-//                     <Link href="/orders">
-//                       <ShoppingBag className="mr-2 h-4 w-4" />
-//                       Orders
-//                     </Link>
-//                   </DropdownMenuItem>
-//                   {session.user.role === "admin" && (
-//                     <DropdownMenuItem asChild>
-//                       <Link href="/admin">
-//                         <Settings className="mr-2 h-4 w-4" />
-//                         Admin
-//                       </Link>
-//                     </DropdownMenuItem>
-//                   )}
-//                   <DropdownMenuSeparator />
-//                   <DropdownMenuItem onClick={handleSignOut}>
-//                     <LogOut className="mr-2 h-4 w-4" />
-//                     Sign Out
-//                   </DropdownMenuItem>
-//                 </DropdownMenuContent>
-//               </DropdownMenu>
-//             ) : (
-//               <div className="flex items-center space-x-2">
-//                 <Button variant="ghost" asChild>
-//                   <Link href="/auth/signin">Sign In</Link>
-//                 </Button>
-//                 <Button asChild>
-//                   <Link href="/auth/signup">Sign Up</Link>
-//                 </Button>
-//               </div>
-//             )}
-
-//             {/* Mobile Menu */}
-//             <Sheet>
-//               <SheetTrigger asChild>
-//                 <Button variant="ghost" size="icon" className="md:hidden">
-//                   <Menu className="h-5 w-5" />
-//                 </Button>
-//               </SheetTrigger>
-//               <SheetContent side="right" className="w-80 overflow-y-auto max-h-screen">
-//                 <div className="flex flex-col space-y-4 mt-8">
-//                   {navigation.map((item) => (
-//                     <Link
-//                       key={item.name}
-//                       href={item.href}
-//                       className="text-lg font-medium hover:text-primary transition-colors"
-//                     >
-//                       {item.name}
-//                     </Link>
-//                   ))}
-//                   {session && (
-//                     <>
-//                       <hr className="my-4" />
-//                       <Link
-//                         href="/profile"
-//                         className="text-lg font-medium hover:text-primary transition-colors"
-//                       >
-//                         Profile
-//                       </Link>
-//                       <Link
-//                         href="/orders"
-//                         className="text-lg font-medium hover:text-primary transition-colors"
-//                       >
-//                         Orders
-//                       </Link>
-//                       {session.user.role === "admin" && (
-//                         <Link
-//                           href="/admin"
-//                           className="text-lg font-medium hover:text-primary transition-colors"
-//                         >
-//                           Admin
-//                         </Link>
-//                       )}
-//                       <Button
-//                         onClick={handleSignOut}
-//                         variant="ghost"
-//                         className="justify-start"
-//                       >
-//                         <LogOut className="mr-2 h-4 w-4" />
-//                         Sign Out
-//                       </Button>
-//                     </>
-//                   )}
-//                 </div>
-//               </SheetContent>
-//             </Sheet>
-//           </div>
-//         </div>
-
-//         {/* Mobile Search */}
-//         {isSearchOpen && (
-//           <div className="lg:hidden pb-4">
-//             <form onSubmit={handleSearch} className="relative">
-//               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-//               <Input
-//                 type="search"
-//                 placeholder="Search jewelry..."
-//                 value={searchQuery}
-//                 onChange={(e) => setSearchQuery(e.target.value)}
-//                 className="pl-10 pr-4"
-//                 autoFocus
-//               />
-//             </form>
-//           </div>
-//         )}
-//       </div>
-//     </header>
-//   );
-// }
-
 "use client";
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { ShoppingBag, ShoppingCart, Menu } from "lucide-react";
+import {
+  ShoppingBag,
+  ShoppingCart,
+  Menu,
+  UserCircle,
+  LogOut,
+  Settings,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/components/providers/cart-provider";
 import { SEO } from "@/constants";
+import { cn } from "@/lib/utils";
 
-export function Header() {
+const initials = (name?: string | null) =>
+  name
+    ?.split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "U";
+
+/* --------------  DESKTOP USER  -------------- */
+const DesktopUser = () => {
+  const { data: session } = useSession();
+  return session ? (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="rounded-full shrink-0">
+          <Avatar className="h-7 w-7">
+            <AvatarImage src={session.user?.image || ""} />
+            <AvatarFallback>{initials(session.user?.name)}</AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/profile">Profile</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/orders">Orders</Link>
+        </DropdownMenuItem>
+        {session.user?.role === "admin" && (
+          <DropdownMenuItem asChild>
+            <Link href="/admin">Admin</Link>
+          </DropdownMenuItem>
+        )}
+        {session?.user?.role === "admin" && (
+          <DropdownMenuItem asChild>
+            <Link href="/admin/products">Products</Link>
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="text-red-600 dark:text-red-400"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Logout
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ) : (
+    <Button asChild size="sm">
+      <Link href="/auth/signin">Login</Link>
+    </Button>
+  );
+};
+
+/* --------------  MOBILE SHEET  -------------- */
+const MobileSheet = () => {
   const { data: session } = useSession();
   const { state } = useCart();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo / Company Name */}
-          <Link href="/" className="flex items-center gap-2">
-            <ShoppingBag className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl text-foreground">
-              {SEO.SITE_NAME}
-            </span>
-          </Link>
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="shrink-0">
+          <Menu className="h-5 w-5" />
+        </Button>
+      </SheetTrigger>
 
-          {/* Desktop right-side actions */}
-          <div className="hidden md:flex items-center gap-2">
-            <ThemeToggle />
+      <SheetContent side="right" className="w-72">
+        <div className="mt-6 flex flex-col gap-3">
+          {/* Cart */}
+          <Button asChild variant="ghost" className="justify-between">
             <Link href="/cart">
-              <Button variant="ghost" size="icon" className="relative">
+              <span className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5" />
+                Cart
+              </span>
+              {state.itemCount > 0 && (
+                <Badge
+                  className={cn(
+                    "ml-auto shrink-0",
+                    "h-5 min-w-[1.25rem] px-1 text-xs"
+                  )}
+                >
+                  {state.itemCount}
+                </Badge>
+              )}
+            </Link>
+          </Button>
+
+          {session ? (
+            <>
+              <div className="flex items-center gap-3 rounded-md p-2">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src={session.user?.image || ""} />
+                  <AvatarFallback>
+                    {initials(session.user?.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">
+                    {session.user?.name}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {session.user?.email}
+                  </p>
+                </div>
+              </div>
+              <Separator />
+              <Button asChild variant="ghost" className="justify-start">
+                <Link href="/profile">Profile</Link>
+              </Button>
+              <Button asChild variant="ghost" className="justify-start">
+                <Link href="/orders">Orders</Link>
+              </Button>
+              {session.user?.role === "admin" && (
+                <Button asChild variant="ghost" className="justify-start">
+                  <Link href="/admin">Admin</Link>
+                </Button>
+              )}
+              <Separator />
+              <Button
+                variant="ghost"
+                className="justify-start text-red-600 dark:text-red-400"
+                onClick={() => signOut({ callbackUrl: "/" })}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </>
+          ) : (
+            <Button asChild>
+              <Link href="/auth/signin">Login</Link>
+            </Button>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+/* --------------  MAIN HEADER  -------------- */
+export function Header() {
+  const { state } = useCart();
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
+      <div className="mx-auto flex h-16 w-full max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* LEFT: logo  (never shrinks) */}
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <ShoppingBag className="h-6 w-6 text-primary" />
+          <span className="font-bold text-xl text-foreground truncate">
+            {SEO.SITE_NAME}
+          </span>
+        </Link>
+
+        {/* RIGHT: actions  (flex + min-w-0 lets middle space collapse) */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
+          {/* Desktop cart */}
+          <div className="hidden md:block">
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="relative shrink-0"
+            >
+              <Link href="/cart">
                 <ShoppingCart className="h-5 w-5" />
                 {state.itemCount > 0 && (
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs">
+                  <Badge
+                    className={cn(
+                      "absolute -top-2 -right-2",
+                      "h-5 min-w-[1.25rem] px-1 text-xs"
+                    )}
+                  >
                     {state.itemCount}
                   </Badge>
                 )}
-              </Button>
-            </Link>
-            {session ? (
-              <Button
-                variant="ghost"
-                onClick={() => signOut({ callbackUrl: "/" })}
-              >
-                Logout
-              </Button>
-            ) : (
-              <Button asChild>
-                <Link href="/auth/signin">Login</Link>
-              </Button>
-            )}
+              </Link>
+            </Button>
           </div>
-
-          {/* Mobile menu */}
-          <div className="md:hidden flex items-center gap-2">
-            <ThemeToggle />
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-64">
-                <div className="mt-8 flex flex-col items-center gap-4">
-                  <Link href="/cart">
-                    <Button variant="ghost" size="icon" className="relative">
-                      <ShoppingCart className="h-5 w-5" />
-                      {state.itemCount > 0 && (
-                        <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs">
-                          {state.itemCount}
-                        </Badge>
-                      )}
-                    </Button>
-                  </Link>
-                  {session ? (
-                    <Button
-                      variant="ghost"
-                      onClick={() => signOut({ callbackUrl: "/" })}
-                    >
-                      Logout
-                    </Button>
-                  ) : (
-                    <Button asChild>
-                      <Link href="/auth/signin">Login</Link>
-                    </Button>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
+          <DesktopUser />
+          <div className="md:hidden">
+            <MobileSheet />
           </div>
         </div>
       </div>

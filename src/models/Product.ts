@@ -1,78 +1,47 @@
-import mongoose, { Schema } from 'mongoose';
-import { IProduct } from '@/types';
+import mongoose, { Schema } from "mongoose";
 
-const ProductSchema = new Schema<IProduct>(
-  {
-    name: {
-      type: String,
-      required: [true, 'Product name is required'],
-      trim: true,
-      maxlength: [100, 'Product name cannot exceed 100 characters'],
-    },
-    description: {
-      type: String,
-      required: [true, 'Product description is required'],
-      maxlength: [2000, 'Description cannot exceed 2000 characters'],
-    },
-    price: {
-      type: Number,
-      required: [true, 'Product price is required'],
-      min: [0, 'Price cannot be negative'],
-    },
-    images: [{
-      type: String,
-      required: true,
-    }],
-    stock: {
-      type: Number,
-      required: [true, 'Stock quantity is required'],
-      min: [0, 'Stock cannot be negative'],
-      default: 0,
-    },
-    category: {
-      type: String,
-      required: [true, 'Product category is required'],
-      trim: true,
-    },
-    slug: {
-      type: String,
-      unique: true,
-      lowercase: true,
-    },
-    featured: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  {
-    timestamps: true,
-    toJSON: {
-      transform: function (doc, ret) {
-        delete ret.__v;
-        return ret;
-      },
-    },
-  }
+const SpecificationSchema = new mongoose.Schema(
+    {},
+    { _id: false, strict: false }
 );
 
-// Create indexes
-ProductSchema.index({ name: 'text', description: 'text' });
-ProductSchema.index({ category: 1 });
-ProductSchema.index({ price: 1 });
-ProductSchema.index({ featured: 1 });
-ProductSchema.index({ slug: 1 });
-
-// Generate slug from name before saving
-ProductSchema.pre('save', function (next) {
-  if (!this.slug) {
-    this.slug = this.name
-      .toLowerCase()
-      .replace(/[^a-z0-9 -]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim('-');
+export interface ProductModel extends Document {
+    name: string;
+    price: number;
+    originalPrice?: number;
+    productImages: Array<string>;
+    rating?: number;
+    reviews?: number;
+    badge?: string;
+    category: string;
+    description: string;
+    features: string[];
+    specifications: Record<string, string>;
+    inStock: boolean;
+    stockCount: number;
+    createdAt: Date;
+    updatedAt: Date;
   }
-  next();
-});
 
-export default mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);
+const ProductSchema = new Schema(
+    {
+        _id: { type: String, required: true },
+        name: { type: String, required: true },
+        price: { type: Number, required: true }, // cents
+        originalPrice: { type: Number, default: 0 },
+        productImages: [String],
+        rating: { type: Number, default: 4.5, min: 0, max: 5 },
+        reviews: { type: Number, default: 0 },
+        badge: { type: String, default: "" },
+        category: { type: String, required: true },
+        description: { type: String, required: true },
+        features: [String],
+        specifications: SpecificationSchema, // dynamic map/object
+        inStock: { type: Boolean, default: true },
+        stockCount: { type: Number, default: 0 },
+    },
+    { timestamps: true }
+);
+
+export default mongoose.models.Product || mongoose.model("Product", ProductSchema);
+export type IProduct = mongoose.InferSchemaType<typeof ProductSchema>;

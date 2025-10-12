@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { signUpSchema } from '@/lib/validations';
@@ -13,9 +14,6 @@ export async function POST(request: NextRequest) {
     // Validate input data
     const validatedData = signUpSchema.parse(body);
     const { name, email, password } = validatedData;
-
-    // Connect to database
-    await connectDB();
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -41,7 +39,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         message: SUCCESS_MESSAGES.USER_CREATED,
-        user: {
+        data: {
           id: user._id,
           name: user.name,
           email: user.email,

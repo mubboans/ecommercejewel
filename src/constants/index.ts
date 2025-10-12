@@ -172,9 +172,9 @@ export const SOCIAL_LINKS = {
 
 // Contact information
 export const CONTACT_INFO = {
-  EMAIL: 'support@ecommerce.com',
+    EMAIL: 'contact@dilaraa.com',
   PHONE: '+91-9833259443 / 9004811338',
-  ADDRESS: '123 Main Street, City, State, 12345',
+  ADDRESS: 'Mumbai, Maharashtra',
 } as const;
 
 // SEO defaults

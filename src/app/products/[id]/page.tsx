@@ -8,7 +8,6 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Star, ShoppingCart, Heart, Share2, ArrowLeft, Plus, Minus } from 'lucide-react';
 import { CURRENCY } from '@/constants';
 import { useCart, cartHelpers } from '@/components/providers/cart-provider';
@@ -127,7 +126,7 @@ export default function ProductDetailPage() {
       <MainLayout>
         <div className="container mx-auto px-4 py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-          <p className="text-muted-foreground mb-8">The product you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground mb-8">The product you&apos;re looking for doesn&apos;t exist.</p>
           <Button asChild>
             <Link href="/products">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -269,16 +268,16 @@ export default function ProductDetailPage() {
             {/* Description */}
             <div>
               <p className="text-muted-foreground leading-relaxed">
-                {product.description}
+                {product?.description}
               </p>
             </div>
 
             {/* Size Selection (for rings) */}
-            {product.category === 'Rings' && product.specifications['Available Sizes'] && (
+            {/* {product.category === 'Rings' && product?.specifications['Available Sizes'] && (
               <div>
                 <h3 className="font-semibold mb-3">Size</h3>
                 <div className="flex space-x-2">
-                  {product.specifications['Available Sizes'].split(', ').map((size) => (
+                  {product?.specifications?['Available Sizes']?.split(', ')?.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
@@ -293,7 +292,7 @@ export default function ProductDetailPage() {
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Quantity */}
             <div>

@@ -33,7 +33,7 @@ export default function CartPage() {
             <ShoppingBag className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
             <h1 className="text-3xl font-bold mb-4">Your Cart is Empty</h1>
             <p className="text-muted-foreground mb-8">
-              Looks like you haven't added any items to your cart yet. Start shopping to fill it up!
+              Looks like you haven&apos;t added any items to your cart yet. Start shopping to fill it up!
             </p>
             <Button asChild size="lg">
               <Link href="/products">
