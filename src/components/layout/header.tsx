@@ -2,12 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import {
-  ShoppingBag,
-  ShoppingCart,
-  Menu,
-  LogOut
-} from "lucide-react";
+import { ShoppingBag, ShoppingCart, Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -25,7 +20,8 @@ import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/components/providers/cart-provider";
 import { SEO } from "@/constants";
 import { cn } from "@/lib/utils";
-
+import Image from "next/image";
+import logo from "../../../public/images/logo.png";
 const initials = (name?: string | null) =>
   name
     ?.split(" ")
@@ -40,7 +36,11 @@ const DesktopUser = () => {
   return session ? (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full shrink-0 min-touch-target"
+        >
           <Avatar className="h-7 w-7">
             <AvatarImage src={session.user?.image || ""} />
             <AvatarFallback>{initials(session.user?.name)}</AvatarFallback>
@@ -77,7 +77,7 @@ const DesktopUser = () => {
       </DropdownMenuContent>
     </DropdownMenu>
   ) : (
-    <Button asChild size="sm">
+    <Button asChild size="sm" className="min-touch-target">
       <Link href="/auth/signin">Login</Link>
     </Button>
   );
@@ -91,15 +91,23 @@ const MobileSheet = () => {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="shrink-0 min-touch-target"
+        >
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="right" className="w-72">
+      <SheetContent side="right" className="w-72 sm:w-80">
         <div className="mt-6 flex flex-col gap-3">
           {/* Cart */}
-          <Button asChild variant="ghost" className="justify-between">
+          <Button
+            asChild
+            variant="ghost"
+            className="justify-between min-touch-target"
+          >
             <Link href="/cart">
               <span className="flex items-center gap-2">
                 <ShoppingCart className="h-5 w-5" />
@@ -127,7 +135,7 @@ const MobileSheet = () => {
                     {initials(session.user?.name)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">
                     {session.user?.name}
                   </p>
@@ -137,21 +145,33 @@ const MobileSheet = () => {
                 </div>
               </div>
               <Separator />
-              <Button asChild variant="ghost" className="justify-start">
+              <Button
+                asChild
+                variant="ghost"
+                className="justify-start min-touch-target"
+              >
                 <Link href="/profile">Profile</Link>
               </Button>
-              <Button asChild variant="ghost" className="justify-start">
+              <Button
+                asChild
+                variant="ghost"
+                className="justify-start min-touch-target"
+              >
                 <Link href="/orders">Orders</Link>
               </Button>
               {session.user?.role === "admin" && (
-                <Button asChild variant="ghost" className="justify-start">
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="justify-start min-touch-target"
+                >
                   <Link href="/admin">Admin</Link>
                 </Button>
               )}
               <Separator />
               <Button
                 variant="ghost"
-                className="justify-start text-red-600 dark:text-red-400"
+                className="justify-start text-red-600 dark:text-red-400 min-touch-target"
                 onClick={() => signOut({ callbackUrl: "/" })}
               >
                 <LogOut className="mr-2 h-4 w-4" />
@@ -159,7 +179,7 @@ const MobileSheet = () => {
               </Button>
             </>
           ) : (
-            <Button asChild>
+            <Button asChild className="min-touch-target">
               <Link href="/auth/signin">Login</Link>
             </Button>
           )}
@@ -174,26 +194,29 @@ export function Header() {
   const { state } = useCart();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* LEFT: logo  (never shrinks) */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <ShoppingBag className="h-6 w-6 text-primary" />
-          <span className="font-bold text-xl text-foreground truncate">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="mx-auto flex h-16 w-full max-w-screen-2xl items-center justify-between px-4 sm:px-4 md:px-6 lg:px-8">
+        {/* LEFT: logo */}
+        <Link
+          href="/"
+          className="flex items-center gap-2 flex-shrink-0 min-w-0"
+        >
+          <ShoppingBag className="h-6 w-6 text-primary mr-2 flex-shrink-0" />
+          <span className="font-bold text-lg sm:text-xl text-foreground truncate">
             {SEO.SITE_NAME}
           </span>
         </Link>
 
-        {/* RIGHT: actions  (flex + min-w-0 lets middle space collapse) */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        {/* RIGHT: actions */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <ThemeToggle />
-          {/* Desktop cart */}
-          <div className="hidden md:block">
+          {/* Desktop cart - hidden on mobile */}
+          <div className="hidden sm:block">
             <Button
               asChild
               variant="ghost"
               size="icon"
-              className="relative shrink-0"
+              className="relative shrink-0 min-touch-target"
             >
               <Link href="/cart">
                 <ShoppingCart className="h-5 w-5" />
@@ -211,7 +234,7 @@ export function Header() {
             </Button>
           </div>
           <DesktopUser />
-          <div className="md:hidden">
+          <div className="sm:hidden">
             <MobileSheet />
           </div>
         </div>
@@ -219,3 +242,4 @@ export function Header() {
     </header>
   );
 }
+/* --------------  END OF HEADER  -------------- */
