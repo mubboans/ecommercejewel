@@ -168,7 +168,17 @@ const MobileSheet = () => {
                   <Link href="/admin">Admin</Link>
                 </Button>
               )}
+              {session.user?.role === "admin" && (
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="justify-start min-touch-target"
+                >
+                  <Link href="/admin/products">Product</Link>
+                </Button>
+              )}
               <Separator />
+
               <Button
                 variant="ghost"
                 className="justify-start text-red-600 dark:text-red-400 min-touch-target"

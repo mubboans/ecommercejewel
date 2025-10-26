@@ -57,6 +57,7 @@ export default function RootLayout({
         <DatabaseInitializer />
         <Providers>
           {children}
+
         </Providers>
       </body>
     </html>

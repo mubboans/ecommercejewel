@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import * as React from "react";
@@ -21,6 +20,7 @@ import {
   Pencil,
   Trash2,
   Eye,
+  Plus,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { IProduct } from "@/models/Product";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // Define the columns for Product data
 export const productColumns: ColumnDef<IProduct>[] = [
@@ -72,16 +73,26 @@ export const productColumns: ColumnDef<IProduct>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "images",
+    accessorKey: "productImages",
     header: "Image",
     cell: ({ row }) => {
-      const images = row.getValue("images") as string[];
-      const firstImage = images && images[0] ? images[0].trim() : "";
+      const productImages = row.getValue("productImages") as string[];
+      const firstImage =
+        productImages && productImages[0] ? productImages[0].trim() : "";
+
+      // Optimize Cloudinary image URL
+      const optimizedImage = firstImage
+        ? firstImage.replace(
+            "/upload/",
+            "/upload/w_100,h_100,c_fill,q_auto,f_auto/"
+          )
+        : "";
+
       return (
         <div className="flex items-center justify-center">
           {firstImage ? (
             <img
-              src={firstImage}
+              src={optimizedImage}
               alt={row.getValue("name")}
               className="h-12 w-12 rounded-md object-cover"
               onError={(e) => {
@@ -105,15 +116,23 @@ export const productColumns: ColumnDef<IProduct>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="text-xs sm:text-sm font-medium"
         >
           Product Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       );
     },
     cell: ({ row }) => {
       const name = row.getValue("name") as string;
-      return <div className="font-medium">{name}</div>;
+      return (
+        <div
+          className="font-medium text-xs sm:text-sm max-w-[200px] truncate"
+          title={name}
+        >
+          {name}
+        </div>
+      );
     },
   },
   {
@@ -123,14 +142,17 @@ export const productColumns: ColumnDef<IProduct>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="text-xs sm:text-sm font-medium"
         >
           Category
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       );
     },
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("category")}</div>
+      <div className="capitalize text-xs sm:text-sm">
+        {row.getValue("category")}
+      </div>
     ),
   },
   {
@@ -140,10 +162,10 @@ export const productColumns: ColumnDef<IProduct>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="w-full justify-end"
+          className="w-full justify-end text-xs sm:text-sm font-medium"
         >
           Price
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       );
     },
@@ -153,14 +175,17 @@ export const productColumns: ColumnDef<IProduct>[] = [
       const formatted = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
-      }).format(price);
+      }).format(price / 100); // Divide by 100 since price is in cents
 
       return (
         <div className="text-right">
-          <div className="font-medium">{formatted}</div>
-          {originalPrice && originalPrice !== price && (
+          <div className="font-medium text-xs sm:text-sm">{formatted}</div>
+          {originalPrice && originalPrice > price && (
             <div className="text-xs text-muted-foreground line-through">
-              ${originalPrice}
+              {new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: "USD",
+              }).format(originalPrice / 100)}
             </div>
           )}
         </div>
@@ -174,9 +199,10 @@ export const productColumns: ColumnDef<IProduct>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="text-xs sm:text-sm font-medium"
         >
           Rating
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       );
     },
@@ -185,7 +211,9 @@ export const productColumns: ColumnDef<IProduct>[] = [
       const reviews = row.original.reviews;
       return (
         <div className="flex items-center gap-1">
-          <span className="font-medium">⭐ {rating}</span>
+          <span className="font-medium text-xs sm:text-sm">
+            ⭐ {rating?.toFixed(1) || "0.0"}
+          </span>
           {reviews && (
             <span className="text-xs text-muted-foreground">({reviews})</span>
           )}
@@ -200,9 +228,10 @@ export const productColumns: ColumnDef<IProduct>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="text-xs sm:text-sm font-medium"
         >
           Stock
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       );
     },
@@ -214,6 +243,7 @@ export const productColumns: ColumnDef<IProduct>[] = [
         <div className="flex items-center gap-2">
           <Badge
             variant={inStock && stockCount > 0 ? "default" : "destructive"}
+            className="text-xs"
           >
             {inStock && stockCount > 0 ? `${stockCount} units` : "Out of Stock"}
           </Badge>
@@ -229,7 +259,7 @@ export const productColumns: ColumnDef<IProduct>[] = [
       if (!badge) return null;
 
       return (
-        <Badge variant="secondary" className="capitalize">
+        <Badge variant="secondary" className="capitalize text-xs">
           {badge}
         </Badge>
       );
@@ -242,49 +272,70 @@ export const productColumns: ColumnDef<IProduct>[] = [
     cell: ({ row }) => {
       const product = row.original;
 
+      const handleDelete = async (router: ReturnType<typeof useRouter>) => {
+        if (confirm("Are you sure you want to delete this product?")) {
+          try {
+            const response = await fetch(`/api/products/${product._id}`, {
+              method: "DELETE",
+            });
+
+            if (response.ok) {
+              router.refresh();
+            } else {
+              throw new Error("Failed to delete product");
+            }
+          } catch (error) {
+            console.error("Error deleting product:", error);
+            alert("Failed to delete product");
+          }
+        }
+      };
+
       return (
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log("View:", product);
-            }}
-            title="View Details"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log("Edit:", product);
-            }}
-            title="Edit Product"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (confirm("Delete this product?")) {
-                console.log("Delete:", product._id);
-              }
-            }}
-            title="Delete Product"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuLabel className="text-sm">Actions</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => navigator.clipboard.writeText(product._id)}
+              className="text-sm cursor-pointer"
+            >
+              Copy Product ID
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-sm cursor-pointer">
+              <Link
+                href={`/admin/products/${product._id}`}
+                className="flex items-center w-full"
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Product
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-sm cursor-pointer">
+              <Link
+                href={`/products/${product._id}`}
+                className="flex items-center w-full"
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                View Product
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => handleDelete(useRouter())}
+              className="text-destructive focus:text-destructive text-sm cursor-pointer"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Product
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       );
     },
   },
@@ -292,92 +343,23 @@ export const productColumns: ColumnDef<IProduct>[] = [
 
 interface ProductTableProps {
   products: IProduct[];
-  onEdit?: (product: IProduct) => void;
-  onDelete?: (productId: string) => void;
-  onView?: (product: IProduct) => void;
+  onAddProduct?: () => void;
 }
 
-export function ProductTable({
-  products,
-  onEdit,
-  onDelete,
-  onView,
-}: ProductTableProps) {
+export function ProductTable({ products, onAddProduct }: ProductTableProps) {
+  const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
-//   const router = useRouter();
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-
-  // Create columns with callback handlers
-  const columnsWithActions = React.useMemo<ColumnDef<IProduct>[]>(
-    () =>
-      productColumns.map((col) => {
-        if (col.id === "actions") {
-          return {
-            ...col,
-            cell: ({ row }) => {
-              const product = row.original;
-
-              return (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem
-                      onClick={() => navigator.clipboard.writeText(product._id)}
-                    >
-                      Copy Product ID
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    {onView && (
-                      <DropdownMenuItem onClick={() => onView(product)}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        View Details
-                      </DropdownMenuItem>
-                    )}
-                    {onEdit && (
-                      <DropdownMenuItem onClick={() => onEdit(product)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        <Link href={`/admin/products/${product._id}`}>
-                          Edit Product
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    {(onView || onEdit) && onDelete && (
-                      <DropdownMenuSeparator />
-                    )}
-                    {onDelete && (
-                      <DropdownMenuItem
-                        onClick={() => onDelete(product._id)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete Product
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              );
-            },
-          };
-        }
-        return col;
-      }),
-    [onEdit, onDelete, onView]
-  );
+  const [globalFilter, setGlobalFilter] = React.useState("");
 
   const table = useReactTable({
     data: products,
-    columns: columnsWithActions,
+    columns: productColumns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -391,6 +373,7 @@ export function ProductTable({
       columnFilters,
       columnVisibility,
       rowSelection,
+      globalFilter,
     },
     initialState: {
       pagination: {
@@ -399,18 +382,40 @@ export function ProductTable({
     },
   });
 
+  const handleBulkDelete = async () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+
+    if (
+      confirm(
+        `Are you sure you want to delete ${selectedRows.length} products?`
+      )
+    ) {
+      try {
+        const deletePromises = selectedRows.map((row) =>
+          fetch(`/api/products/${row.original._id}`, { method: "DELETE" })
+        );
+
+        await Promise.all(deletePromises);
+        table.resetRowSelection();
+        router.refresh();
+      } catch (error) {
+        console.error("Error deleting products:", error);
+        alert("Failed to delete selected products");
+      }
+    }
+  };
+
   return (
     <div className="w-full space-y-4">
       {/* Toolbar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <Input
-            placeholder="Filter products by name..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("name")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
+            placeholder="Search all products..."
+            value={globalFilter ?? ""}
+            onChange={(event) => setGlobalFilter(event.target.value)}
+            className="max-w-full sm:max-w-xs text-sm"
           />
           <Input
             placeholder="Filter by category..."
@@ -420,21 +425,34 @@ export function ProductTable({
             onChange={(event) =>
               table.getColumn("category")?.setFilterValue(event.target.value)
             }
-            className="max-w-sm"
+            className="max-w-full sm:max-w-xs text-sm"
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* {onAdd && (
-            <Button onClick={onAdd}>
-              <Plus className="mr-2 h-4 w-4" />
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          {table.getFilteredSelectedRowModel().rows.length > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              className="w-full sm:w-auto"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Selected ({table.getFilteredSelectedRowModel().rows.length}
+              )
+            </Button>
+          )}
+
+          {onAddProduct && (
+            <Button onClick={onAddProduct} className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
               Add Product
             </Button>
-          )} */}
+          )}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="w-full sm:w-auto">
                 Columns <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -462,14 +480,14 @@ export function ProductTable({
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-md border">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="text-xs sm:text-sm">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -488,9 +506,13 @@ export function ProductTable({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className="hover:bg-muted/50"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      className="text-xs sm:text-sm py-3"
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -502,8 +524,8 @@ export function ProductTable({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columnsWithActions.length}
-                  className="h-24 text-center"
+                  colSpan={productColumns.length}
+                  className="h-24 text-center text-sm"
                 >
                   No products found.
                 </TableCell>
@@ -514,18 +536,18 @@ export function ProductTable({
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="text-sm text-muted-foreground">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
-          </div>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="text-sm text-muted-foreground">
+          {table.getFilteredSelectedRowModel().rows.length} of{" "}
+          {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="text-sm text-muted-foreground">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+          <div className="flex items-center gap-2 text-sm">
+            <span>
+              Page {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
+            </span>
           </div>
 
           <div className="flex items-center gap-1">
@@ -568,7 +590,7 @@ export function ProductTable({
             onChange={(e) => {
               table.setPageSize(Number(e.target.value));
             }}
-            className="h-8 rounded-md border border-input bg-background px-3 py-1 text-sm"
+            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
           >
             {[10, 20, 30, 40, 50].map((pageSize) => (
               <option key={pageSize} value={pageSize}>

@@ -16,19 +16,19 @@ export interface ProductModel extends Document {
     category: string;
     description: string;
     features: string[];
-    specifications: Record<string, string>;
+    specifications: Record<string, string>; // This should be object, not array
     inStock: boolean;
     stockCount: number;
     createdAt: Date;
     updatedAt: Date;
-  }
+}
 
 const ProductSchema = new Schema(
     {
-        _id: { type: String, required: true },
+        _id: { type: String, default: () => new mongoose.Types.ObjectId().toString() },
         name: { type: String, required: true },
         price: { type: Number, required: true }, // cents
-        originalPrice: { type: Number, default: 0 },
+        originalPrice: { type: Number },
         productImages: [String],
         rating: { type: Number, default: 4.5, min: 0, max: 5 },
         reviews: { type: Number, default: 0 },
@@ -36,7 +36,10 @@ const ProductSchema = new Schema(
         category: { type: String, required: true },
         description: { type: String, required: true },
         features: [String],
-        specifications: SpecificationSchema, // dynamic map/object
+        specifications: {
+            type: SpecificationSchema,
+            default: {} // Add default empty object
+        },
         inStock: { type: Boolean, default: true },
         stockCount: { type: Number, default: 0 },
     },

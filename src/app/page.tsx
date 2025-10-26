@@ -305,7 +305,7 @@ export default function Home() {
               products, exclusive offers, and special discounts.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto items-center">
               <input
                 type="email"
                 placeholder="Enter your email address"

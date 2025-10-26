@@ -3,335 +3,410 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 
-/* ---------- empty product skeleton ---------- */
-const emptyProduct: Product = {
-  name: "",
-//   originalPrice: 0,
-  images: [] as string[],
-  rating: 4.5,
-  badge: "",
-  category: "",
-  description: "",
-  features: [] as string[],
-  specifications: {} as Record<string, string>,
-  inStock: true,
-};
+import { Save, ArrowLeft, Loader2, Plus } from "lucide-react";
+import { CloudinaryUpload } from "@/components/admin/cloudinary-upload";
+import { DynamicSpecifications } from "@/components/admin/dynamic-specifications";
 
-interface Product {
-  name?: string;
-  price?: number | null;
-  originalPrice?: number;
-  images?: string[];
-  rating?: number | null;
-  reviews?: number | null;
-  badge?: string;
-  category?: string;
-  description?: string;
-  features?: string[];
-  specifications?: Record<string, string>;
-  inStock?: boolean;
-  stockCount?: number | null;
+interface AddProductProps {
+  onSuccess?: () => void;
 }
 
-export default function AdminProductsPage() {
+interface Specification {
+  key: string;
+  value: string;
+}
+
+export function AddProduct({ onSuccess }: AddProductProps) {
   const router = useRouter();
-  const [data, setData] = useState<typeof emptyProduct>(emptyProduct);
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    price: "",
+    originalPrice: "",
+    category: "",
+    stockCount: "0",
+    inStock: true,
+    rating: "4",
+    badge: "",
+    features: [""],
+    specifications: [] as Specification[],
+    images: [] as string[], // This will now store Cloudinary URLs
+  });
 
-  /* ---------- helpers ---------- */
-  const addFeature = () =>
-    setData((d) => ({ ...d, features: [...d.features || [], ""] }));
-  const updateFeature = (idx: number, val: string) =>
-    setData((d) => ({
-      ...d,
-      features: d.features?.map((f, i) => (i === idx ? val : f)) || [],
-    }));
-  const removeFeature = (idx: number) =>
-    setData((d) => ({
-      ...d,
-      features: d.features?.filter((_, i) => i !== idx) || [],
-    }));
-
-  const addSpec = () => {
-    const key = prompt("Specification name (e.g. Material)");
-    if (!key) return;
-    const val = prompt("Value");
-    if (!val) return;
-    setData((d) => ({
-      ...d,
-      specifications: { ...d.specifications, [key]: val },
+  const handleInputChange = (field: string, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
     }));
   };
-  const removeSpec = (key: string) =>
-    setData((d) => {
-      const copy = { ...d.specifications };
-      delete copy[key];
-      return { ...d, specifications: copy };
-    });
 
-  /* ---------- submit ---------- */
-  const handleSubmit = async () => {
+  const handleFeatureChange = (index: number, value: string) => {
+    const newFeatures = [...formData.features];
+    newFeatures[index] = value;
+    setFormData((prev) => ({ ...prev, features: newFeatures }));
+  };
+
+  const addFeature = () => {
+    setFormData((prev) => ({
+      ...prev,
+      features: [...prev.features, ""],
+    }));
+  };
+
+  const removeFeature = (index: number) => {
+    const newFeatures = formData.features.filter((_, i) => i !== index);
+    setFormData((prev) => ({
+      ...prev,
+      features: newFeatures.length > 0 ? newFeatures : [""],
+    }));
+  };
+
+  // Handle image upload - now receives Cloudinary URLs directly
+  const handleImageUpload = (urls: string[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: urls,
+    }));
+  };
+
+  // Handle image removal
+  const handleImageRemove = (index: number) => {
+    const newImages = formData.images.filter((_, i) => i !== index);
+    setFormData((prev) => ({
+      ...prev,
+      images: newImages,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
+
     try {
-      const res = await fetch("/api/admin/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+      // Filter out empty features and specifications
+      const cleanFeatures = formData.features.filter((feature) =>
+        feature.trim()
+      );
+      const cleanSpecifications = formData.specifications.filter(
+        (spec) => spec.key.trim() && spec.value.trim()
+      );
+
+      // Convert specifications array to object
+      const specificationsObject: Record<string, string> = {};
+      cleanSpecifications.forEach((spec) => {
+        specificationsObject[spec.key] = spec.value;
       });
-      if (!res.ok) throw new Error(await res.text());
-      toast.success("✅ Product created!");
-      router.refresh(); // optional: revalidate any server pages
-      setData(emptyProduct);
-    } catch (e: any) {
-      toast.error(e.message);
+
+      const submitData = {
+        name: formData.name,
+        description: formData.description,
+        price: Number(formData.price),
+        originalPrice: formData.originalPrice
+          ? Number(formData.originalPrice)
+          : undefined,
+        category: formData.category,
+        stockCount: Number(formData.stockCount),
+        inStock: formData.inStock,
+        rating: Number(formData.rating),
+        badge: formData.badge || undefined,
+        features: cleanFeatures,
+        specifications: specificationsObject,
+        productImages: formData.images, // Use the Cloudinary URLs
+      };
+
+      const response = await fetch("/api/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(submitData),
+      });
+
+      if (response.ok) {
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push("/admin/products");
+          router.refresh();
+        }
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create product");
+      }
+    } catch (error) {
+      console.error("Error creating product:", error);
+      alert(
+        error instanceof Error ? error.message : "Failed to create product"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Admin – Add Product</h1>
-          <Button variant="outline" onClick={() => router.push("/")}>
-            Back to Shop
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex items-center gap-4">
+        <Button
+          variant="outline"
+          onClick={() => router.back()}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+        <h1 className="text-2xl font-bold">Add New Product</h1>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Basic Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Product Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  placeholder="Enter product name"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description *</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
+                  placeholder="Enter product description"
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="price">Price *</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.price}
+                    onChange={(e) => handleInputChange("price", e.target.value)}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="originalPrice">Original Price</Label>
+                  <Input
+                    id="originalPrice"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.originalPrice}
+                    onChange={(e) =>
+                      handleInputChange("originalPrice", e.target.value)
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category *</Label>
+                  <Input
+                    id="category"
+                    value={formData.category}
+                    onChange={(e) =>
+                      handleInputChange("category", e.target.value)
+                    }
+                    placeholder="e.g., Electronics, Clothing"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="stockCount">Stock Count *</Label>
+                  <Input
+                    id="stockCount"
+                    type="number"
+                    min="0"
+                    value={formData.stockCount}
+                    onChange={(e) =>
+                      handleInputChange("stockCount", e.target.value)
+                    }
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="rating">Rating</Label>
+                  <Input
+                    id="rating"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="5"
+                    value={formData.rating}
+                    onChange={(e) =>
+                      handleInputChange("rating", e.target.value)
+                    }
+                    placeholder="0.0 - 5.0"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="badge">Badge</Label>
+                  <Input
+                    id="badge"
+                    value={formData.badge}
+                    onChange={(e) => handleInputChange("badge", e.target.value)}
+                    placeholder="New, Sale, Featured, etc."
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="inStock"
+                  checked={formData.inStock}
+                  onChange={(e) =>
+                    handleInputChange("inStock", e.target.checked)
+                  }
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="inStock">In Stock</Label>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Right Column - Media & Specifications */}
+          <div className="space-y-6">
+            {/* Images Upload */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Product Images</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CloudinaryUpload
+                  onUpload={handleImageUpload}
+                  onRemove={handleImageRemove}
+                  existingImages={formData.images}
+                  multiple={true}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Features */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Features</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Label>Product Features</Label>
+                <div className="space-y-3">
+                  {formData.features.map((feature, index) => (
+                    <div key={index} className="flex gap-2 items-start">
+                      <Input
+                        placeholder={`Feature ${index + 1}`}
+                        value={feature}
+                        onChange={(e) =>
+                          handleFeatureChange(index, e.target.value)
+                        }
+                        className="flex-1"
+                      />
+                      {formData.features.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeFeature(index)}
+                          className="h-9 w-9 p-0 flex-shrink-0"
+                        >
+                          ×
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addFeature}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Feature
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Add product features. Empty fields will be automatically
+                  removed.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Specifications */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Specifications</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DynamicSpecifications
+                  specifications={formData.specifications}
+                  onChange={(specs) =>
+                    handleInputChange("specifications", specs)
+                  }
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex justify-end gap-4 pt-6 border-t">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Create Product
+              </>
+            )}
           </Button>
         </div>
-      </header>
-
-      <main className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Product Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* basic fields */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label className="mb-2">Name *</Label>
-                <Input
-                  value={data.name}
-                  onChange={(e) => setData({ ...data, name: e.target.value })}
-                  placeholder="Bohemian Rose Gold Earrings"
-                />
-              </div>
-              <div>
-                <Label className="mb-2">Category *</Label>
-                <Input
-                  value={data.category}
-                  onChange={(e) =>
-                    setData({ ...data, category: e.target.value })
-                  }
-                  placeholder="Earrings"
-                />
-              </div>
-              <div>
-                <Label className="mb-2">Price (¢) *</Label>
-                <Input
-                  type="number"
-                  value={data.price || ""}
-                  placeholder="Enter price"
-                  onChange={(e) =>
-                    setData({ ...data, price: Number(e.target.value) })
-                  }
-                />
-              </div>
-              <div>
-                <Label className="mb-2">Original Price (¢)</Label>
-                <Input
-                  type="number"
-                  value={data.originalPrice}
-                  onChange={(e) =>
-                    setData({ ...data, originalPrice: Number(e.target.value) })
-                  }
-                />
-              </div>
-              <div>
-                <Label className="mb-2">Stock Count</Label>
-                <Input
-                  type="number"
-                  value={data.stockCount || ""}
-                  onChange={(e) =>
-                    setData({ ...data, stockCount: Number(e.target.value) })
-                  }
-                />
-              </div>
-              <div>
-                <Label className="mb-2">Badge</Label>
-                <Input
-                  value={data.badge}
-                  onChange={(e) => setData({ ...data, badge: e.target.value })}
-                  placeholder="Best Seller"
-                />
-              </div>
-              <div>
-                <Label className="mb-2">Rating (0-5)</Label>
-                <Input
-                  type="number"
-                  step={0.1}
-                  min={0}
-                  max={5}
-                  value={data.rating || ""}
-                  onChange={(e) =>
-                    setData({ ...data, rating: Number(e.target.value) })
-                  }
-                />
-              </div>
-              <div>
-                <Label className="mb-2">Reviews Count</Label>
-                <Input
-                  type="number"
-                  value={data.reviews || ""}
-                  onChange={(e) =>
-                    setData({ ...data, reviews: Number(e.target.value) })
-                  }
-                />
-              </div>
-            </div>
-
-            {/* description */}
-            <div>
-              <Label className="mb-2">Description *</Label>
-              <Textarea
-                value={data.description}
-                onChange={(e) =>
-                  setData({ ...data, description: e.target.value })
-                }
-                rows={4}
-                placeholder="Hand-crafted rose gold earrings..."
-              />
-            </div>
-
-            {/* images */}
-            {/* images → same UX as features */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label>Images (URLs)</Label>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    setData({ ...data, images: [...(data.images || []), ""] })
-                  }
-                >
-                  <Plus className="mr-1 h-4 w-4" /> Add URL
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                {data?.images?.map((url, idx) => (
-                  <div key={idx} className="flex gap-2 items-center">
-                    <Input
-                      placeholder="https://example.com/image.jpg"
-                      value={url}
-                      onChange={(e) => {
-                        const copy = [...(data.images || [])];
-                        copy[idx] = e.target.value;
-                        setData({ ...data, images: copy });
-                      }}
-                    />
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => {
-                        const copy = [...data.images || []].filter((_, i) => i !== idx);
-                        setData({ ...data, images: copy });
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* features */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label className="mb-2">Features</Label>
-                <Button size="sm" variant="outline" onClick={addFeature}>
-                  <Plus className="mr-1 h-4 w-4" /> Add
-                </Button>
-              </div>
-              <div className="space-y-2">
-                {data.features?.map((f, i) => (
-                  <div key={i} className="flex gap-2">
-                    <Input
-                      placeholder="Feature"
-                      value={f || ""}
-                      onChange={(e) => updateFeature(i, e.target.value)}
-                    />
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => removeFeature(i)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* specifications */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label className="mb-2">Specifications</Label>
-                <Button size="sm" variant="outline" onClick={addSpec}>
-                  <Plus className="mr-1 h-4 w-4" /> Add
-                </Button>
-              </div>
-              <div className="space-y-2">
-                {Object.entries(data.specifications || {}).map(([k, v]) => (
-                  <div key={k} className="flex items-center gap-2">
-                    <Badge variant="secondary">{k}</Badge>
-                    <span className="text-sm">{v}</span>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => removeSpec(k)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* stock switch */}
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={data.inStock}
-                onCheckedChange={(c) => setData({ ...data, inStock: c })}
-              />
-              <Label>In Stock</Label>
-            </div>
-
-            <Separator />
-
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setData(emptyProduct)}>
-                Reset
-              </Button>
-              <Button onClick={handleSubmit} disabled={loading}>
-                {loading ? "Creating..." : "Create Product"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </main>
+      </form>
     </div>
   );
 }
