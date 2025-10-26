@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { ArrowBigLeft } from "lucide-react";
 
 const refundSchema = z.object({
   orderId: z.string().min(3, "Order ID is required"),
@@ -73,19 +74,34 @@ export default function RefundPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 flex items-center justify-center py-12 px-4 relative">
       {/* Back Button */}
-      <Button
+      {/* <Button
         variant="outline"
         onClick={() => router.back()}
         className="absolute top-6 left-6 flex items-center gap-2"
       >
         ← Back
-      </Button>
+      </Button> */}
+
+      {/* <div className="w-full max-w-lg">
+        <Button
+          variant="outline"
+          onClick={() => router.back()}
+          className="flex items-center gap-2 mb-6"
+        >
+          ← Back
+        </Button>
+      </div> */}
 
       <Card className="w-full max-w-lg shadow-lg border border-gray-100">
         <CardHeader>
-          <CardTitle className="text-2xl font-semibold text-center text-gray-800">
-            Refund Request
-          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => router.back()} size="sm">
+              <ArrowBigLeft/>
+            </Button>
+            <CardTitle className="text-2xl font-semibold text-gray-800">
+              Refund Request
+            </CardTitle>
+          </div>
           <p className="text-sm text-gray-500 text-center mt-2">
             Fill in your details to request a refund. Our support team will
             reach out within 2–3 business days.

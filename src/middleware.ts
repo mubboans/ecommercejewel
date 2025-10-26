@@ -41,7 +41,11 @@ export default withAuth(
             '/contact',
           '/help',
           '/press',
-          '/privacy'
+          '/privacy',
+          '/size-guide',
+          '/shipping',
+          '/terms',
+          '/returns'
         ];
 
         // Check if current path is public
