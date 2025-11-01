@@ -11,6 +11,7 @@ export async function getProducts(id?: string) {
     return Product.find().lean(); // lean() keeps _id :)
 }
 
+
 // In your actions.js - make sure it handles the productImages array properly
 export async function createProduct(data: Omit<IProduct | any, "_id" | "createdAt" | "updatedAt">) {
     try {

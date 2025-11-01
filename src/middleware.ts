@@ -45,7 +45,8 @@ export default withAuth(
           '/size-guide',
           '/shipping',
           '/terms',
-          '/returns'
+          '/returns',
+          '/cancel-refund'
         ];
 
         // Check if current path is public

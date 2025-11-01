@@ -8,22 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from "lucide-react";
 import { CURRENCY } from "@/constants";
-import { useCart, cartHelpers } from "@/components/providers/cart-provider";
+import { useCart } from "@/components/providers/cart-provider";
 
 export default function CartPage() {
-  const { state: cartState, dispatch } = useCart();
-
-  const updateQuantity = (productId: string, newQuantity: number) => {
-    cartHelpers.updateQuantity(dispatch, productId, newQuantity);
-  };
-
-  const removeItem = (productId: string) => {
-    cartHelpers.removeItem(dispatch, productId);
-  };
-
-  const clearCart = () => {
-    cartHelpers.clearCart(dispatch);
-  };
+  const { state: cartState, removeItem, updateQuantity, clearCart } = useCart();
 
   if (cartState.items.length === 0) {
     return (

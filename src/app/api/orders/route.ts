@@ -1,100 +1,125 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { Order } from '@/models/Order';
-import connectDB from '@/lib/db/mongodb';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import connectDB from "@/lib/db/mongodb";
+import Order from "@/models/Order";
+import Product from "@/models/Product";
+import { authOptions } from "@/lib/auth/auth.config";
 
-export async function POST(request: NextRequest) {
+// Create new order
+export async function POST(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+
+        if (!session) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        const body = await req.json();
+        const {
+            items,
+            subtotal,
+            tax = 0,
+            shipping = 0,
+            shippingAddress,
+            billingAddress,
+            paymentMethod,
+            shippingMethod,
+            notes,
+        } = body;
+
         await connectDB();
 
-        // Get user session (you'll need to set up NextAuth)
-        // const session = await getServerSession();
-        // if (!session) {
-        //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        // }
-
-        const body = await request.json();
-
-        // Validate required fields
-        const requiredFields = [
-            'userId', 'customerInfo', 'items', 'subtotal', 'tax',
-            'shipping', 'total', 'paymentMethod', 'shippingAddress'
-        ];
-
-        for (const field of requiredFields) {
-            if (!body[field]) {
+        // Validate and reserve stock
+        for (const item of items) {
+            const product = await Product.findById(item.productId);
+            if (!product || product.stockCount < item.quantity) {
                 return NextResponse.json(
-                    { error: `Missing required field: ${field}` },
+                    { error: `Insufficient stock for ${item.name}` },
                     { status: 400 }
                 );
             }
         }
 
-        // Create order
+        // Calculate totals
+        const total = subtotal + tax + shipping;
+
+        // Create order with pending status
         const order = new Order({
-            userId: body.userId,
-            customerInfo: body.customerInfo,
-            items: body.items,
-            subtotal: body.subtotal,
-            tax: body.tax,
-            taxRate: 0.18,
-            shipping: body.shipping,
-            shippingMethod: body.shippingMethod || 'standard',
-            total: body.total,
-            paymentMethod: body.paymentMethod,
-            paymentStatus: 'pending',
-            shippingAddress: body.shippingAddress,
-            billingAddress: body.billingAddress || body.shippingAddress,
-            notes: body.notes,
-            deviceInfo: body.deviceInfo || {},
-            source: 'web',
-            status: 'created',
-            inventoryReserved: true,
-            inventoryReleaseDate: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
+            userId: session.user.id,
+            items,
+            subtotal,
+            tax,
+            shipping,
+            total,
+            status: 'pending',
+            shippingAddress,
+            billingAddress: billingAddress || shippingAddress,
+            paymentInfo: {
+                method: paymentMethod,
+                status: 'pending',
+                amount: total,
+                currency: 'INR'
+            },
+            shippingMethod,
+            notes,
         });
 
-        const savedOrder = await order.save();
+        await order.save();
 
-        return NextResponse.json(
-            {
-                message: 'Order created successfully',
-                order: savedOrder
-            },
-            { status: 201 }
-        );
+        return NextResponse.json({
+            orderNumber: order.orderNumber,
+            message: 'Order created successfully',
+            orderId: order._id
+        }, { status: 201 });
 
     } catch (error) {
-        console.error('Order creation error:', error);
+        console.error("❌ Order creation error:", error);
         return NextResponse.json(
-            { error: 'Internal server error' },
+            { error: "Failed to create order" },
             { status: 500 }
         );
     }
 }
 
-export async function GET(request: NextRequest) {
+// Get user's orders
+export async function GET(req: Request) {
     try {
-        await connectDB();
+        const session = await getServerSession(authOptions);
 
-        const { searchParams } = new URL(request.url);
-        const userId = searchParams.get('userId');
-
-        if (!userId) {
+        if (!session) {
             return NextResponse.json(
-                { error: 'User ID is required' },
-                { status: 400 }
+                { error: "Unauthorized" },
+                { status: 401 }
             );
         }
 
-        const orders = await Order.find({ userId })
-            .sort({ createdAt: -1 })
-            .limit(50);
+        await connectDB();
 
-        return NextResponse.json({ orders });
+        const { searchParams } = new URL(req.url);
+        const page = parseInt(searchParams.get('page') || '1');
+        const limit = parseInt(searchParams.get('limit') || '10');
+
+        const orders = await Order.find({ userId: session.user.id })
+            .sort({ createdAt: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
+
+        const total = await Order.countDocuments({ userId: session.user.id });
+
+        return NextResponse.json({
+            orders,
+            totalPages: Math.ceil(total / limit),
+            currentPage: page,
+            total
+        });
 
     } catch (error) {
-        console.error('Orders fetch error:', error);
+        console.error("❌ Orders fetch error:", error);
         return NextResponse.json(
-            { error: 'Internal server error' },
+            { error: "Failed to fetch orders" },
             { status: 500 }
         );
     }

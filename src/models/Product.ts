@@ -46,5 +46,24 @@ const ProductSchema = new Schema(
     { timestamps: true }
 );
 
+ProductSchema.methods.updateStock = async function (quantity: number): Promise<boolean> {
+    if (this.stockCount >= quantity) {
+        this.stockCount -= quantity;
+        this.inStock = this.stockCount > 0;
+        await this.save();
+        return true;
+    }
+    return false;
+};
+
+// Static method to check and reserve stock
+ProductSchema.statics.reserveStock = async function (productId: string, quantity: number): Promise<boolean> {
+    const product = await this.findById(productId);
+    if (!product || product.stockCount < quantity) {
+        return false;
+    }
+    return true;
+};
+
 export default mongoose.models.Product || mongoose.model("Product", ProductSchema);
 export type IProduct = mongoose.InferSchemaType<typeof ProductSchema>;

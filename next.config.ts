@@ -1,29 +1,29 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  ignoreDuringBuilds: true,
-  images: {
-    remotePatterns: [
-     {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'via.placeholder.com',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-  },
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+    experimental: {
+        serverComponentsExternalPackages: ['mongoose'],
+    },
+    images: {
+        domains: ['res.cloudinary.com', 'images.unsplash.com'],
+    },
+    // Important for NextAuth
+    async headers() {
+        return [
+            {
+                source: '/(.*)',
+                headers: [
+                    {
+                        key: 'X-Frame-Options',
+                        value: 'DENY',
+                    },
+                    {
+                        key: 'X-Content-Type-Options',
+                        value: 'nosniff',
+                    },
+                ],
+            },
+        ];
+    },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

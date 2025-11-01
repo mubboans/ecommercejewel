@@ -1,6 +1,13 @@
-import { MainLayout } from "@/components/layout/main-layout";
-import { Checkout } from "./checkout";
+import { Metadata } from "next";
+import { CheckoutContent } from "./checkout-content";
+
+
+export const metadata: Metadata = {
+  title: "Checkout | Your Jewellery Store",
+  description:
+    "Complete your jewellery purchase securely with multiple payment options.",
+};
 
 export default function CheckoutPage() {
-  return <Checkout />;
+  return <CheckoutContent />;
 }

@@ -75,6 +75,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       price: product.price,
       image: product.productImages[0],
       quantity: quantity,
+      maxStock: product.stockCount,
     };
 
     cartHelpers.addItem(dispatch, cartItem);

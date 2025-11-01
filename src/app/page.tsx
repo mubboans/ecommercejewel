@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -14,53 +15,57 @@ import { Badge } from "@/components/ui/badge";
 import { MainLayout } from "@/components/layout/main-layout";
 import { CURRENCY } from "@/constants";
 import logo from "../../public/images/logo.png";
+import connectDB from "@/lib/db/mongodb";
+import Product from "@/models/Product";
+import { getProducts } from "./admin/products/actions";
+import ProductsPage from "./products/page";
 // Featured handmade jewelry products
-const featuredProducts = [
-  {
-    id: "1",
-    name: "Bohemian Rose Gold Earrings",
-    price: 1299,
-    originalPrice: 1599,
-    image:
-      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=300&h=300&fit=crop&crop=center",
-    rating: 4.9,
-    reviews: 156,
-    badge: "Best Seller",
-  },
-  {
-    id: "2",
-    name: "Vintage Pearl Necklace",
-    price: 2499,
-    originalPrice: 2999,
-    image:
-      "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop&crop=center",
-    rating: 4.8,
-    reviews: 203,
-    badge: "Popular",
-  },
-  {
-    id: "3",
-    name: "Handcrafted Silver Ring",
-    price: 899,
-    originalPrice: 1199,
-    image:
-      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=300&h=300&fit=crop&crop=center",
-    rating: 4.7,
-    reviews: 89,
-    badge: "New",
-  },
-  {
-    id: "4",
-    name: "Gemstone Charm Bracelet",
-    price: 1599,
-    originalPrice: 1999,
-    image:
-      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=300&h=300&fit=crop&crop=center",
-    rating: 4.6,
-    reviews: 134,
-    badge: "Sale",
-  },
-];
+// const featuredProducts = [
+//   {
+//     id: "1",
+//     name: "Bohemian Rose Gold Earrings",
+//     price: 1299,
+//     originalPrice: 1599,
+//     image:
+//       "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=300&h=300&fit=crop&crop=center",
+//     rating: 4.9,
+//     reviews: 156,
+//     badge: "Best Seller",
+//   },
+//   {
+//     id: "2",
+//     name: "Vintage Pearl Necklace",
+//     price: 2499,
+//     originalPrice: 2999,
+//     image:
+//       "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop&crop=center",
+//     rating: 4.8,
+//     reviews: 203,
+//     badge: "Popular",
+//   },
+//   {
+//     id: "3",
+//     name: "Handcrafted Silver Ring",
+//     price: 899,
+//     originalPrice: 1199,
+//     image:
+//       "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=300&h=300&fit=crop&crop=center",
+//     rating: 4.7,
+//     reviews: 89,
+//     badge: "New",
+//   },
+//   {
+//     id: "4",
+//     name: "Gemstone Charm Bracelet",
+//     price: 1599,
+//     originalPrice: 1999,
+//     image:
+//       "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=300&h=300&fit=crop&crop=center",
+//     rating: 4.6,
+//     reviews: 134,
+//     badge: "Sale",
+//   },
+// ];
 
 const features = [
   {
@@ -80,7 +85,14 @@ const features = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+    const featuredProducts = (await getProducts())?.map((product: any) => ({
+      ...product,
+      // Ensure the product matches the Product type structure
+      id: product._id,
+    }));
+    console.log(featuredProducts,"featuredProducts");
+    
   return (
     <MainLayout>
       {/* Hero Section */}
@@ -204,7 +216,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {featuredProducts.map((product) => (
+            {featuredProducts?.map((product: any) => (
               <Card
                 key={product.id}
                 className="group product-card border-0 shadow-sm hover:shadow-md transition-shadow duration-300"
@@ -212,7 +224,7 @@ export default function Home() {
                 <CardContent className="p-3 sm:p-4">
                   <div className="relative mb-3 sm:mb-4">
                     <Image
-                      src={product.image}
+                      src={product?.productImages[0].trim()}
                       alt={product.name}
                       width={300}
                       height={300}

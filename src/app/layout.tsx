@@ -22,8 +22,8 @@ export const metadata: Metadata = {
   },
   description: SEO.SITE_DESCRIPTION,
   keywords: SEO.SITE_KEYWORDS,
-  authors: [{ name: 'E-Commerce Team' }],
-  creator: 'E-Commerce Team',
+  authors: [{ name: 'Dilaraa' }],
+  creator: 'MubashirAnsari',
   openGraph: {
     type: 'website',
     locale: 'en_US',

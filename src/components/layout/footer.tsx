@@ -26,6 +26,7 @@ export function Footer() {
       { name: "Returns", href: "/returns" },
       { name: "Shipping Info", href: "/shipping" },
       { name: "Size Guide", href: "/size-guide" },
+      { name: "Cancel & Refund", href: "/cancel-refund" },
     ],
     legal: [
       { name: "Privacy Policy", href: "/privacy" },

@@ -15,12 +15,6 @@ export default async function ProductsServerPage() {
   // Fetch products on server
   const products = (await getProducts()) as unknown as IProduct[];
  
-  try {
-    // await Product.insertMany(products_data);
-    console.log('----added products data----');
-  } catch (error) {
-    log(error, "error");
-  }
   // Server action for delete
   async function handleDelete(productId: string) {
     "use server";

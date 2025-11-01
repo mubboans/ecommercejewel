@@ -4,13 +4,14 @@ import { SessionProvider } from 'next-auth/react';
 import { ThemeProvider } from './theme-provider';
 import { CartProvider } from './cart-provider';
 import { Toaster } from "sonner";
+import AuthSessionProvider from './session-provider';
 interface ProvidersProps {
   children: React.ReactNode;
 }
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <SessionProvider>
+    <AuthSessionProvider>
       <ThemeProvider
         attribute="class"
         defaultTheme="system"
@@ -18,10 +19,11 @@ export function Providers({ children }: ProvidersProps) {
         disableTransitionOnChange
       >
         <CartProvider>
-          <Toaster position="top-center" richColors expand duration={4000} />
+          <Toaster position="bottom-right" richColors expand duration={3000} />
           {children}
         </CartProvider>
       </ThemeProvider>
-    </SessionProvider>
+    </AuthSessionProvider>
+    // </SessionProvider>
   );
 }
