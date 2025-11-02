@@ -53,6 +53,15 @@ const AdminDropdown = () => {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link
+            href="/admin/"
+            className="flex items-center gap-2 w-full"
+          >
+            <Package className="h-4 w-4" />
+            Dashboard
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link
             href="/admin/products"
             className="flex items-center gap-2 w-full"
           >
@@ -61,10 +70,7 @@ const AdminDropdown = () => {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link
-            href="/admin/refund"
-            className="flex items-center gap-2 w-full"
-          >
+          <Link href="/admin/refund" className="flex items-center gap-2 w-full">
             <FileText className="h-4 w-4" />
             Refund
           </Link>

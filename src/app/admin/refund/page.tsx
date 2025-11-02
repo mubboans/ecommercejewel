@@ -42,14 +42,7 @@ export default function AdminRefundsPage() {
   return (
     <MainLayout>
       <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 py-10 px-6 relative">
-        {/* 🧭 Back Button */}
-        <Button
-          variant="outline"
-          onClick={() => router.back()}
-          className="absolute top-6 left-6 flex items-center gap-2"
-        >
-          ← Back
-        </Button>
+
 
         <div className="max-w-4xl mx-auto">
           <Card className="shadow-lg border border-gray-100">

@@ -19,6 +19,7 @@ import {
 import { SEO } from "@/constants";
 import { MainLayout } from "@/components/layout/main-layout";
 import { toast } from "sonner";
+
 function SignInLoading() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
@@ -50,17 +51,27 @@ function SignInForm() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session, status } = useSession();
-  const callbackUrl = searchParams.get("callbackUrl") || "/admin/products";
+  const { data: session, status, update } = useSession();
 
-  // Redirect if already authenticated
+  const callbackUrl = searchParams.get("callbackUrl") || "/admin";
+  const errorParam = searchParams.get("error");
+
+  // Handle redirect if already authenticated
   useEffect(() => {
     if (status === "authenticated" && session) {
       console.log("User authenticated, redirecting to:", callbackUrl);
-      router.push(callbackUrl);
-      router.refresh(); // Important: refresh the router to update the page
+      // Use window.location for a hard redirect to ensure complete refresh
+      window.location.href = callbackUrl;
     }
-  }, [session, status, router, callbackUrl]);
+  }, [session, status, callbackUrl]);
+
+  // Show error from URL parameter
+  useEffect(() => {
+    if (errorParam === "AccessDenied") {
+      setError("Access denied. Admin privileges required.");
+      toast.error("Access denied. Admin privileges required.");
+    }
+  }, [errorParam]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,20 +83,25 @@ function SignInForm() {
         email,
         password,
         redirect: false,
-        callbackUrl,
       });
 
       console.log("SignIn result:", result);
 
       if (result?.error) {
         setError("Invalid email or password");
-         toast.error("Invalid email or password");
+        toast.error("Invalid email or password");
       } else if (result?.ok) {
-        // Success - the session will be updated and useEffect will handle redirect
-        console.log("Sign in successful, should redirect soon");
-        // Force a session refresh
-        toast.success("Signed in successfully", { duration: 2000, position: "bottom-right" });
-        window.location.reload();
+        // Success - force session update and redirect
+        console.log("Sign in successful, updating session...");
+        toast.success("Signed in successfully");
+
+        // Update session and then redirect
+        await update();
+
+        // Use setTimeout to ensure session is updated before redirect
+        setTimeout(() => {
+          window.location.href = callbackUrl;
+        }, 1000);
       }
     } catch (err: any) {
       console.error("Sign in error:", err);
@@ -146,7 +162,7 @@ function SignInForm() {
             </div>
             <CardTitle className="text-2xl">Welcome back</CardTitle>
             <CardDescription>
-              Sign in to your account to continue shopping
+              Sign in to your account to continue
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -167,6 +183,7 @@ function SignInForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isLoading}
+                  autoComplete="email"
                 />
               </div>
 
@@ -189,6 +206,7 @@ function SignInForm() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
+                    autoComplete="current-password"
                   />
                   <Button
                     type="button"
