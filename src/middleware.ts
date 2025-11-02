@@ -1,3 +1,4 @@
+// middleware.ts
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 
@@ -34,7 +35,7 @@ export default withAuth(
             authorized: ({ token, req }) => {
                 const { pathname } = req.nextUrl;
 
-                // Allow access to public routes
+                // Allow access to public routes and auth API
                 const publicRoutes = [
                     '/',
                     '/products',
@@ -56,7 +57,9 @@ export default withAuth(
 
                 // Check if current path is public
                 const isPublicRoute = publicRoutes.some(route =>
-                    pathname === route || pathname.startsWith(route + '/')
+                    pathname === route ||
+                    pathname.startsWith(route + '/') ||
+                    pathname.startsWith('/api/auth/') // Explicitly allow all auth API routes
                 );
 
                 if (isPublicRoute) {
@@ -74,12 +77,12 @@ export const config = {
     matcher: [
         /*
          * Match all request paths except for the ones starting with:
-         * - api (API routes)
+         * - api/auth (auth API routes - important!)
          * - _next/static (static files)
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
          */
-        '/((?!api|_next/static|_next/image|favicon.ico).*)',
+        '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
         '/api/admin/:path*',
         '/api/orders/:path*',
         '/api/users/:path*',

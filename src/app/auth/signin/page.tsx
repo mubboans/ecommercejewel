@@ -51,19 +51,26 @@ function SignInForm() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session, status, update } = useSession();
+  const { data: session, status } = useSession();
 
   const callbackUrl = searchParams.get("callbackUrl") || "/admin";
   const errorParam = searchParams.get("error");
 
-  // Handle redirect if already authenticated
+  // Handle redirect if already authenticated - FIXED VERSION
   useEffect(() => {
     if (status === "authenticated" && session) {
       console.log("User authenticated, redirecting to:", callbackUrl);
-      // Use window.location for a hard redirect to ensure complete refresh
-      window.location.href = callbackUrl;
+
+      // Use a more reliable redirect approach
+      if (window.location.pathname === "/auth/signin") {
+        // Only redirect if we're still on the signin page
+        setTimeout(() => {
+          router.push(callbackUrl);
+          router.refresh(); // Force refresh to update the page
+        }, 500);
+      }
     }
-  }, [session, status, callbackUrl]);
+  }, [session, status, callbackUrl, router]);
 
   // Show error from URL parameter
   useEffect(() => {
@@ -91,14 +98,11 @@ function SignInForm() {
         setError("Invalid email or password");
         toast.error("Invalid email or password");
       } else if (result?.ok) {
-        // Success - force session update and redirect
-        console.log("Sign in successful, updating session...");
+        // Success - use a simpler approach
+        console.log("Sign in successful");
         toast.success("Signed in successfully");
 
-        // Update session and then redirect
-        await update();
-
-        // Use setTimeout to ensure session is updated before redirect
+        // Instead of waiting for session update, redirect directly
         setTimeout(() => {
           window.location.href = callbackUrl;
         }, 1000);
