@@ -46,10 +46,24 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { IProduct } from "@/models/Product";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useProductMutations } from "@/hooks/useProductMutations";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Define the columns for Product data
-export const productColumns: ColumnDef<IProduct>[] = [
+const getProductColumns = (
+  onDeleteProduct: (productId: string) => Promise<void>,
+  setProductToDelete: (product: IProduct | null) => void
+): ColumnDef<IProduct>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -272,23 +286,8 @@ export const productColumns: ColumnDef<IProduct>[] = [
     cell: ({ row }) => {
       const product = row.original;
 
-      const handleDelete = async (router: ReturnType<typeof useRouter>) => {
-        if (confirm("Are you sure you want to delete this product?")) {
-          try {
-            const response = await fetch(`/api/products/${product._id}`, {
-              method: "DELETE",
-            });
-
-            if (response.ok) {
-              router.refresh();
-            } else {
-              throw new Error("Failed to delete product");
-            }
-          } catch (error) {
-            console.error("Error deleting product:", error);
-            alert("Failed to delete product");
-          }
-        }
+      const handleDeleteClick = () => {
+        setProductToDelete(product);
       };
 
       return (
@@ -308,7 +307,7 @@ export const productColumns: ColumnDef<IProduct>[] = [
               Copy Product ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-sm cursor-pointer">
+            <DropdownMenuItem asChild className="text-sm cursor-pointer">
               <Link
                 href={`/admin/products/${product._id}`}
                 className="flex items-center w-full"
@@ -317,7 +316,7 @@ export const productColumns: ColumnDef<IProduct>[] = [
                 Edit Product
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-sm cursor-pointer">
+            <DropdownMenuItem asChild className="text-sm cursor-pointer">
               <Link
                 href={`/products/${product._id}`}
                 className="flex items-center w-full"
@@ -328,7 +327,7 @@ export const productColumns: ColumnDef<IProduct>[] = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => handleDelete(useRouter())}
+              onClick={handleDeleteClick}
               className="text-destructive focus:text-destructive text-sm cursor-pointer"
             >
               <Trash2 className="mr-2 h-4 w-4" />
@@ -342,12 +341,15 @@ export const productColumns: ColumnDef<IProduct>[] = [
 ];
 
 interface ProductTableProps {
-  products: IProduct[];
+  initialProducts?: IProduct[];
   onAddProduct?: () => void;
 }
 
-export function ProductTable({ products, onAddProduct }: ProductTableProps) {
-  const router = useRouter();
+export function ProductTable({
+  initialProducts,
+  onAddProduct,
+}: ProductTableProps) {
+  const { products, deleteProduct, bulkDeleteProducts } = useProductMutations();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -357,9 +359,22 @@ export function ProductTable({ products, onAddProduct }: ProductTableProps) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState("");
 
+  // State for delete confirmation
+  const [productToDelete, setProductToDelete] = React.useState<IProduct | null>(
+    null
+  );
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [productsToBulkDelete, setProductsToBulkDelete] = React.useState<
+    string[]
+  >([]);
+  const [isBulkDeleting, setIsBulkDeleting] = React.useState(false);
+
+  // Use SWR data or fallback to initial props
+  const tableData = products || initialProducts || [];
+
   const table = useReactTable({
-    data: products,
-    columns: productColumns,
+    data: tableData,
+    columns: getProductColumns(deleteProduct, setProductToDelete),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -382,32 +397,108 @@ export function ProductTable({ products, onAddProduct }: ProductTableProps) {
     },
   });
 
-  const handleBulkDelete = async () => {
+  const handleConfirmDelete = async () => {
+    if (!productToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteProduct(productToDelete._id);
+      toast.success("Product deleted successfully");
+      setProductToDelete(null);
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast.error("Failed to delete product");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleBulkDelete = () => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
 
-    if (
-      confirm(
-        `Are you sure you want to delete ${selectedRows.length} products?`
-      )
-    ) {
-      try {
-        const deletePromises = selectedRows.map((row) =>
-          fetch(`/api/products/${row.original._id}`, { method: "DELETE" })
-        );
+    const productIds = selectedRows.map((row) => row.original._id);
+    setProductsToBulkDelete(productIds);
+  };
 
-        await Promise.all(deletePromises);
-        table.resetRowSelection();
-        router.refresh();
-      } catch (error) {
-        console.error("Error deleting products:", error);
-        alert("Failed to delete selected products");
-      }
+  const handleConfirmBulkDelete = async () => {
+    if (productsToBulkDelete.length === 0) return;
+
+    setIsBulkDeleting(true);
+    try {
+      await bulkDeleteProducts(productsToBulkDelete);
+      table.resetRowSelection();
+      toast.success(
+        `Successfully deleted ${productsToBulkDelete.length} products`
+      );
+      setProductsToBulkDelete([]);
+    } catch (error) {
+      console.error("Error deleting products:", error);
+      toast.error("Failed to delete selected products");
+    } finally {
+      setIsBulkDeleting(false);
     }
   };
 
   return (
     <div className="w-full space-y-4">
+      {/* Delete Confirmation Dialogs */}
+      {/* Single Product Delete Dialog */}
+      <AlertDialog
+        open={!!productToDelete}
+        onOpenChange={(open) => !open && setProductToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              product <strong>{productToDelete?.name}</strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Dialog */}
+      <AlertDialog
+        open={productsToBulkDelete.length > 0}
+        onOpenChange={(open) => !open && setProductsToBulkDelete([])}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete multiple products?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete{" "}
+              <strong>{productsToBulkDelete.length}</strong> products.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkDeleting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmBulkDelete}
+              disabled={isBulkDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isBulkDeleting
+                ? "Deleting..."
+                : `Delete ${productsToBulkDelete.length} products`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -524,7 +615,12 @@ export function ProductTable({ products, onAddProduct }: ProductTableProps) {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={productColumns.length}
+                  colSpan={
+                    getProductColumns(
+                      () => Promise.resolve(),
+                      () => {}
+                    ).length
+                  }
                   className="h-24 text-center text-sm"
                 >
                   No products found.

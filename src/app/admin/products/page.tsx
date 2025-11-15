@@ -1,7 +1,8 @@
-import { revalidatePath } from "next/cache";
-import { deleteProduct, getProducts, updateProduct } from "./actions";
+'use client';
+// import { revalidatePath } from "next/cache";
+import { deleteProduct, updateProduct } from "./actions";
 import { ProductTable } from "./product-table";
-import Product, { IProduct } from "@/models/Product";
+import { IProduct } from "@/models/Product";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -9,21 +10,23 @@ import { Header } from "@/components/layout/header";
 import { PromoBanner } from "@/components/headers/promo-banner";
 import { MarqueeBanner } from "@/components/headers/marquee-banner";
 import { Footer } from "@/components/layout/footer";
-import { log } from "console";
+import { useRouter } from "next/navigation";
 
-export default async function ProductsServerPage() {
+// const products = (await getProducts()) as unknown as IProduct[];
+export default function ProductsServerPage() {
   // Fetch products on server
-  const products = (await getProducts()) as unknown as IProduct[];
- 
+
+ const router = useRouter();
+  const handleAddProduct = () => {
+    router.push("/admin/products/new");
+  };
   // Server action for delete
   async function handleDelete(productId: string) {
-    "use server";
     await deleteProduct(productId);
-    revalidatePath("/admin/products");
+    // revalidatePath("/admin/products");
   }
   async function handleEdit(product: IProduct) {
-    "use server";
-    revalidatePath("/admin/products");
+    // revalidatePath("/admin/products");
     try {
       await updateProduct(product?._id, product);
     } catch (error) {
@@ -45,11 +48,12 @@ export default async function ProductsServerPage() {
           </Button>
         </div>
         <div className="w-full overflow-hidden">
-          <ProductTable
+          {/* <ProductTable
             products={products}
             // onDelete={handleDelete}
             // onEdit={handleEdit}
-          />
+          /> */}
+          <ProductTable onAddProduct={handleAddProduct} />
         </div>
       </div>
       <Footer />

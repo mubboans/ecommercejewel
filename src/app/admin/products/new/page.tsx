@@ -325,7 +325,7 @@ export default function NewProductPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="price" className="text-sm font-medium">
-                      Price (¢) *
+                      Price (₹) *
                     </Label>
                     <Input
                       id="price"

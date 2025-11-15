@@ -380,7 +380,7 @@ export default function EditForm({ product }: EditFormProps) {
 
                   <div className="space-y-2">
                     <Label htmlFor="price" className="text-sm font-medium">
-                      Price (¢) *
+                      Price (₹) *
                     </Label>
                     <Input
                       id="price"
@@ -409,7 +409,7 @@ export default function EditForm({ product }: EditFormProps) {
                       htmlFor="originalPrice"
                       className="text-sm font-medium"
                     >
-                      Original Price (¢)
+                      Original Price (₹)
                     </Label>
                     <Input
                       id="originalPrice"
@@ -724,11 +724,11 @@ export default function EditForm({ product }: EditFormProps) {
                     </p>
                     <p>
                       <strong>Price:</strong>{" "}
-                      {data.price ? `¢${data.price}` : "Not set"}
+                      {data.price ? `₹${data.price}` : "Not set"}
                     </p>
                     {data.originalPrice && (
                       <p>
-                        <strong>Original Price:</strong> ¢{data.originalPrice}
+                        <strong>Original Price:</strong> ₹{data.originalPrice}
                       </p>
                     )}
                     <p>
