@@ -4,10 +4,7 @@ import Product from "@/models/Product";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
-export async function GET(
-    req: Request,
-    { params }: { params: Promise<{ orderNumber: string }> }
-) {
+export async function GET(req: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session) {
@@ -19,14 +16,11 @@ export async function GET(
 
         await connectDB();
 
-        const products = await Product.find({
-            // orderNumber,
-            // userId: session.user.id
-        }).sort({ createdAt: -1 });
+        const products = await Product.find({}).sort({ createdAt: -1 });
 
-        if (!products?.length ) {
+        if (!products?.length) {
             return NextResponse.json(
-                { error: "No Product" },
+                { error: "No Products Found" },
                 { status: 404 }
             );
         }
@@ -34,9 +28,9 @@ export async function GET(
         return NextResponse.json(products);
 
     } catch (error) {
-        console.error("❌ Product fetch error:", error);
+        console.error("❌ Products fetch error:", error);
         return NextResponse.json(
-            { error: "Failed to fetch order" },
+            { error: "Failed to fetch products" },
             { status: 500 }
         );
     }

@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 
 export async function DELETE(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions);
@@ -19,8 +19,8 @@ export async function DELETE(
 
         await connectDB();
 
-        // Get the product ID from params
-        const { id } = params;
+        // Get the product ID from params - AWAIT the params
+        const { id } = await params;
 
         // Find and delete the product
         const deletedProduct = await Product.findByIdAndDelete(id);
