@@ -39,6 +39,7 @@ async function connectDB() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
+    console.error("❌ Mongoose connection error:", e);
     throw e;
   }
 

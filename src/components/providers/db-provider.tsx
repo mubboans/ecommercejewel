@@ -12,14 +12,18 @@ export async function initializeDatabase() {
     // Connect to the database
     const mongoose = await connectDB();
     console.log('✅ Database connected successfully');
-    
+
     // Log all registered models to confirm they're synchronized
     const modelNames = Object.keys(mongoose.models);
     console.log(`✅ Models synchronized: ${modelNames.join(', ')}`);
-    
+
     return { success: true, models: modelNames };
   } catch (error) {
     console.error('❌ Database initialization error:', error);
-    return { success: false, error };
+    // Return a safe object instead of throwing, to prevent app crash
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown database error'
+    };
   }
 }

@@ -6,9 +6,20 @@ import Product, { type IProduct } from "@/models/Product";
 import { revalidatePath } from "next/cache";
 
 export async function getProducts(id?: string) {
-    await connectDB();
-    if (id) return Product.findById(id).lean(); // lean() keeps _id :)
-    return Product.find().lean(); // lean() keeps _id :)
+    try {
+        await connectDB();
+        if (id) {
+            // Validate ID format to prevent CastError
+            if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+                return null;
+            }
+            return Product.findById(id).lean();
+        }
+        return Product.find().lean();
+    } catch (error) {
+        console.error("❌ Error fetching products:", error);
+        return null;
+    }
 }
 
 

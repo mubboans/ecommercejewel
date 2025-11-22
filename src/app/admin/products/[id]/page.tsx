@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getProducts } from "../actions";
 import EditForm from "./edit/page";
+import { toast } from "sonner";
 
 /**
  * Converts a Mongoose document (or any complex object)
@@ -14,12 +15,19 @@ function toPlain<T>(obj: T): T {
 
 export default async function EditPage({ params }: { params: { id: string } }) {
   // 🧠 Step 1: Fetch product by ID
-  const productDoc = await getProducts(params.id);
+  let productDoc;
+  try {
+    productDoc = await getProducts(params.id);
+  } catch (error) {
+    console.error("Error fetching product for edit:", error);
+    // Fallback will be handled by the !product check below
+    toast.error("Error fetching product for edit");
+  }
 
   // 🧹 Step 2: Convert to plain object (no Mongoose prototype issues)
   const product = productDoc ? toPlain(productDoc) : null;
   console.log(product, "product");
-  
+
   // 🚫 Handle missing product
   if (!product) {
     notFound();
