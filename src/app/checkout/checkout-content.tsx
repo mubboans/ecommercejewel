@@ -14,10 +14,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Loader2, AlertTriangle, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 
+import { toast } from "sonner";
+
 export function CheckoutContent() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { state: cartState, createOrder, validateStock } = useCart();
+  const { state: cartState, createOrder, validateStock, clearCart } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [stockValidated, setStockValidated] = useState(false);
 
@@ -78,6 +80,20 @@ export function CheckoutContent() {
     );
   }
 
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => {
+        resolve(true);
+      };
+      script.onerror = () => {
+        resolve(false);
+      };
+      document.body.appendChild(script);
+    });
+  };
+
   const handleOrderSubmit = async (formData: any) => {
     if (!stockValidated) {
       toast.error("Please wait while we validate your cart items");
@@ -99,9 +115,13 @@ export function CheckoutContent() {
         50;
 
       // Create order with pending status
-      const orderNumber = await createOrder({
+      const date = new Date();
+      const timestamp = date.getTime().toString().slice(-6);
+      const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      const orderData = {
         ...formData,
         tax,
+        orderNumber: `ORD-${timestamp}${random}`,
         shipping,
         customerInfo: {
           name: `${formData.firstName} ${formData.lastName}`,
@@ -136,14 +156,92 @@ export function CheckoutContent() {
         shippingMethod: formData.shippingMethod,
         notes: formData.notes,
         subscribeNewsletter: formData.subscribeNewsletter,
-      });
+      };
 
-      if (orderNumber) {
-        // Redirect to payment page
-        router.push(`/payment/${orderNumber}`);
+      // 1. Create Order (Pending) using Cart Provider
+      // Pass false to NOT clear cart immediately (wait for payment)
+      const data = await createOrder(orderData, false);
+
+      if (!data) {
+        // createOrder handles error toasts
+        toast.error("Failed to create order");
+        return;
+      }
+
+      const { orderNumber, razorpayOrderId, amount, currency, keyId } = data;
+
+      // 2. Handle Payment
+      if (formData.paymentMethod === "razorpay" && razorpayOrderId) {
+        const res = await loadRazorpay();
+
+        if (!res) {
+          toast.error("Razorpay SDK failed to load. Are you online?");
+          return;
+        }
+
+        const options = {
+          key: keyId,
+          amount: amount.toString(),
+          currency: currency,
+          name: "Dilaraa",
+          description: `Order #${orderNumber}`,
+          order_id: razorpayOrderId,
+          handler: async function (response: any) {
+            try {
+              // 3. Verify Payment
+              const verifyRes = await fetch("/api/payment/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              });
+
+              const verifyData = await verifyRes.json();
+
+              if (verifyRes.ok) {
+                // Clear cart and redirect
+                clearCart();
+                router.push(`/payment/success?orderNumber=${orderNumber}`);
+              } else {
+                toast.error(verifyData.error || "Payment verification failed");
+                router.push(`/payment/failed?orderNumber=${orderNumber}`);
+              }
+            } catch (error) {
+              console.error("Payment verification error:", error);
+              toast.error("Payment verification failed");
+            }
+          },
+          prefill: {
+            name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            contact: formData.phone,
+          },
+          theme: {
+            color: "#3399cc",
+          },
+          modal: {
+            ondismiss: function () {
+              toast.error("Payment cancelled");
+            }
+          }
+        };
+
+        const paymentObject = new (window as any).Razorpay(options);
+        paymentObject.open();
+      } else {
+        // COD or other methods
+        if (orderNumber) {
+          // For COD, we clear cart now since order is placed
+          clearCart();
+          router.push(`/payment/${orderNumber}`);
+        }
       }
     } catch (error) {
       console.error("Checkout error:", error);
+      toast.error(error instanceof Error ? error.message : "Checkout failed");
     } finally {
       setIsProcessing(false);
     }
@@ -151,14 +249,14 @@ export function CheckoutContent() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50/30 py-8">
+      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50/30 py-8 overflow-x-hidden">
         <div className="container mx-auto px-4">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
             <Button variant="outline" asChild className="flex-shrink-0">
               <Link href="/cart">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Cart
+                Back
               </Link>
             </Button>
             <div className="flex-1">
@@ -197,7 +295,7 @@ export function CheckoutContent() {
           )}
 
           <div className="max-w-6xl mx-auto">
-            <div className="grid lg:grid-cols-3 gap-8">
+            <div className="grid lg:grid-cols-3 gap-8 relative">
               {/* Checkout Form */}
               <div className="lg:col-span-2">
                 <CheckoutForm
@@ -209,7 +307,9 @@ export function CheckoutContent() {
 
               {/* Order Summary */}
               <div className="lg:col-span-1">
-                <OrderSummary />
+                <div className="sticky top-24">
+                  <OrderSummary />
+                </div>
               </div>
             </div>
           </div>
@@ -218,6 +318,3 @@ export function CheckoutContent() {
     </MainLayout>
   );
 }
-
-// Add toast import at the top
-import { toast } from "sonner";

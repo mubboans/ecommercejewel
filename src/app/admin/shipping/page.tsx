@@ -5,6 +5,8 @@ import { ShippingSettings } from "@/components/admin/shipping-settings";
 import { MainLayout } from "@/components/layout/main-layout";
 import { authOptions } from "@/lib/auth/auth.config";
 
+export const dynamic = "force-dynamic";
+
 export default async function ShippingSettingsPage() {
   const session = await getServerSession(authOptions);
 

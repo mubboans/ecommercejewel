@@ -70,6 +70,15 @@ const AdminDropdown = () => {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
+          <Link
+            href="/admin/orders"
+            className="flex items-center gap-2 w-full"
+          >
+            <ShoppingCart className="h-4 w-4" />
+            Orders
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href="/admin/refund" className="flex items-center gap-2 w-full">
             <FileText className="h-4 w-4" />
             Refund
@@ -84,15 +93,6 @@ const AdminDropdown = () => {
             Shipping
           </Link>
         </DropdownMenuItem>
-        {/* <DropdownMenuItem asChild>
-          <Link
-            href="/admin/content"
-            className="flex items-center gap-2 w-full"
-          >
-            <Settings className="h-4 w-4" />
-            Website Content
-          </Link>
-        </DropdownMenuItem> */}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -351,6 +351,19 @@ export function Header() {
           </Link>
         </div>
 
+        {/* CENTER: Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-6 text-sm font-medium absolute left-1/2 transform -translate-x-1/2">
+          <Link href="/" className="transition-colors hover:text-primary">
+            Home
+          </Link>
+          <Link href="/products" className="transition-colors hover:text-primary">
+            Products
+          </Link>
+          <Link href="/orders" className="transition-colors hover:text-primary">
+            Orders
+          </Link>
+        </nav>
+
         {/* RIGHT: actions */}
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <ThemeToggle />
@@ -383,6 +396,6 @@ export function Header() {
           </div>
         </div>
       </div>
-    </header>
+    </header >
   );
 }

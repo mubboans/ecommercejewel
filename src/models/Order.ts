@@ -24,6 +24,9 @@ export interface IShippingAddress {
 export interface IPaymentInfo {
     method: 'razorpay' | 'stripe' | 'cod';
     paymentId?: string;
+    razorpayOrderId?: string;
+    razorpayPaymentId?: string;
+    razorpaySignature?: string;
     status: 'pending' | 'completed' | 'failed' | 'refunded';
     amount: number;
     currency: string;
@@ -38,6 +41,12 @@ export type OrderStatus =
     | 'cancelled'
     | 'refunded';
 
+export interface ICustomerInfo {
+    name: string;
+    email: string;
+    phone: string;
+}
+
 export interface IOrder extends Document {
     orderNumber: string;
     userId: mongoose.Types.ObjectId;
@@ -47,6 +56,7 @@ export interface IOrder extends Document {
     shipping: number;
     total: number;
     status: OrderStatus;
+    customerInfo?: ICustomerInfo;
     shippingAddress: IShippingAddress;
     billingAddress?: IShippingAddress;
     paymentInfo: IPaymentInfo;
@@ -64,6 +74,12 @@ const OrderItemSchema = new Schema<IOrderItem>({
     price: { type: Number, required: true },
     quantity: { type: Number, required: true },
     image: { type: String, required: true }
+});
+
+const CustomerInfoSchema = new Schema<ICustomerInfo>({
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String, required: true }
 });
 
 const ShippingAddressSchema = new Schema<IShippingAddress>({
@@ -86,6 +102,9 @@ const PaymentInfoSchema = new Schema<IPaymentInfo>({
         required: true
     },
     paymentId: { type: String },
+    razorpayOrderId: { type: String },
+    razorpayPaymentId: { type: String },
+    razorpaySignature: { type: String },
     status: {
         type: String,
         enum: ['pending', 'completed', 'failed', 'refunded'],
@@ -98,7 +117,6 @@ const PaymentInfoSchema = new Schema<IPaymentInfo>({
 const OrderSchema = new Schema<IOrder>({
     orderNumber: {
         type: String,
-        required: true,
         unique: true
     },
     userId: {
@@ -116,6 +134,7 @@ const OrderSchema = new Schema<IOrder>({
         enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
         default: 'pending'
     },
+    customerInfo: { type: CustomerInfoSchema },
     shippingAddress: { type: ShippingAddressSchema, required: true },
     billingAddress: { type: ShippingAddressSchema },
     paymentInfo: { type: PaymentInfoSchema, required: true },
@@ -128,14 +147,14 @@ const OrderSchema = new Schema<IOrder>({
 });
 
 // Generate order number before saving
-OrderSchema.pre('save', async function (next) {
-    if (this.isNew) {
-        const date = new Date();
-        const timestamp = date.getTime().toString().slice(-6);
-        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        this.orderNumber = `ORD-${timestamp}${random}`;
-    }
-    next();
-});
+// OrderSchema.pre('save', async function (next) {
+//     if (this.isNew) {
+//         const date = new Date();
+//         const timestamp = date.getTime().toString().slice(-6);
+//         const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+//         this.orderNumber = `ORD-${timestamp}${random}`;
+//     }
+//     next();
+// });
 
 export default mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema);

@@ -52,6 +52,7 @@ export async function createProduct(data: Omit<IProduct | any, "_id" | "createdA
 
         await Product.create(productData);
         revalidatePath("/admin/products");
+        revalidatePath("/products");
 
         return { success: true };
     } catch (error) {
@@ -66,9 +67,11 @@ export async function updateProduct(
 ) {
     await Product.findByIdAndUpdate(id, data);
     revalidatePath("/admin/products");
+    revalidatePath("/products");
 }
 
 export async function deleteProduct(id: string) {
     await Product.findByIdAndDelete(id);
     revalidatePath("/admin/products");
+    revalidatePath("/products");
 }

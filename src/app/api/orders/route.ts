@@ -5,6 +5,14 @@ import Order from "@/models/Order";
 import Product from "@/models/Product";
 import { authOptions } from "@/lib/auth/auth.config";
 
+import Razorpay from "razorpay";
+
+// Initialize Razorpay
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID!,
+    key_secret: process.env.RAZORPAY_KEY_SECRET!,
+});
+
 // Create new order
 export async function POST(req: Request) {
     try {
@@ -28,6 +36,8 @@ export async function POST(req: Request) {
             paymentMethod,
             shippingMethod,
             notes,
+            customerInfo,
+            orderNumber,
         } = body;
 
         await connectDB();
@@ -48,6 +58,7 @@ export async function POST(req: Request) {
 
         // Create order with pending status
         const order = new Order({
+            orderNumber,
             userId: session.user.id,
             items,
             subtotal,
@@ -55,6 +66,7 @@ export async function POST(req: Request) {
             shipping,
             total,
             status: 'pending',
+            customerInfo,
             shippingAddress,
             billingAddress: billingAddress || shippingAddress,
             paymentInfo: {
@@ -67,18 +79,48 @@ export async function POST(req: Request) {
             notes,
         });
 
+        // Handle Razorpay Order Creation
+        let razorpayOrder = null;
+        if (paymentMethod === 'razorpay') {
+            try {
+                const options = {
+                    amount: Math.round(total * 100), // amount in smallest currency unit
+                    currency: "INR",
+                    receipt: order._id.toString(),
+                };
+                razorpayOrder = await razorpay.orders.create(options);
+
+                // Save Razorpay Order ID
+                order.paymentInfo.razorpayOrderId = razorpayOrder.id;
+            } catch (razorpayError) {
+                console.error("Razorpay order creation failed:", razorpayError);
+                return NextResponse.json(
+                    { error: "Failed to initiate payment gateway" },
+                    { status: 500 }
+                );
+            }
+        }
+
         await order.save();
 
         return NextResponse.json({
             orderNumber: order.orderNumber,
             message: 'Order created successfully',
-            orderId: order._id
+            orderId: order._id,
+            // Return Razorpay details if applicable
+            razorpayOrderId: razorpayOrder?.id,
+            amount: razorpayOrder?.amount,
+            currency: razorpayOrder?.currency,
+            keyId: process.env.RAZORPAY_KEY_ID
         }, { status: 201 });
 
     } catch (error) {
         console.error("❌ Order creation error:", error);
         return NextResponse.json(
-            { error: "Failed to create order" },
+            {
+                error: "Failed to create order",
+                details: error instanceof Error ? error.message : "Unknown error"
+            },
             { status: 500 }
         );
     }

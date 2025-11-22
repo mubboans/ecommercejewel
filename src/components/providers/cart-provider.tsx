@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { createContext, useContext, useReducer, useEffect } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 
 export interface CartItem {
@@ -24,9 +24,9 @@ type CartAction =
   | { type: "ADD_ITEM"; payload: CartItem }
   | { type: "REMOVE_ITEM"; payload: string }
   | {
-      type: "UPDATE_QUANTITY";
-      payload: { productId: string; quantity: number };
-    }
+    type: "UPDATE_QUANTITY";
+    payload: { productId: string; quantity: number };
+  }
   | { type: "CLEAR_CART" }
   | { type: "SET_LOADING"; payload: boolean }
   | { type: "LOAD_CART"; payload: CartItem[] };
@@ -152,9 +152,9 @@ interface CartContextType {
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  createOrder: (orderData: any) => Promise<string | null>;
+  createOrder: (orderData: any, shouldClearCart?: boolean) => Promise<any | null>;
   validateStock: () => Promise<boolean>;
-  dispatch: React.Dispatch<CartAction>; 
+  dispatch: React.Dispatch<CartAction>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -232,7 +232,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state.items]);
 
-  const addItem = (item: CartItem) => {
+  const addItem = useCallback((item: CartItem) => {
     // Validate item before adding
     if (
       !item.productId ||
@@ -253,14 +253,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     dispatch({ type: "ADD_ITEM", payload: item });
     toast.success(`${item.name} added to cart`);
-  };
+  }, []);
 
-  const removeItem = (productId: string) => {
+  const removeItem = useCallback((productId: string) => {
     dispatch({ type: "REMOVE_ITEM", payload: productId });
     toast.success("Item removed from cart");
-  };
+  }, []);
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = useCallback((productId: string, quantity: number) => {
     if (quantity < 0) {
       console.error("Invalid quantity:", quantity);
       return;
@@ -271,15 +271,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } else {
       dispatch({ type: "UPDATE_QUANTITY", payload: { productId, quantity } });
     }
-  };
+  }, [removeItem]);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     dispatch({ type: "CLEAR_CART" });
     toast.success("Cart cleared");
-  };
+  }, []);
 
   // Validate stock before creating order
-  const validateStock = async (): Promise<boolean> => {
+  const validateStock = useCallback(async (): Promise<boolean> => {
     if (state.items.length === 0) {
       toast.error("Cart is empty");
       return false;
@@ -314,10 +314,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       toast.error("Failed to validate stock. Please try again.");
       return false;
     }
-  };
+  }, [state.items]);
 
   // Create order with pending status
-  const createOrder = async (orderData: any): Promise<string | null> => {
+  const createOrder = useCallback(async (orderData: any, shouldClearCart: boolean = true): Promise<any | null> => {
     if (state.items.length === 0) {
       toast.error("Cart is empty");
       return null;
@@ -346,16 +346,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to create order");
+        throw new Error(error.details || error.error || "Failed to create order");
       }
 
-      const order = await response.json();
+      const data = await response.json();
 
-      // Clear cart only after successful order creation
-      clearCart();
+      // Clear cart only if requested
+      if (shouldClearCart) {
+        clearCart();
+      }
 
       toast.success("Order created successfully!");
-      return order.orderNumber;
+      return data;
     } catch (error) {
       console.error("Order creation error:", error);
       toast.error(
@@ -365,7 +367,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
-  };
+  }, [state.items, state.total, validateStock, clearCart]);
 
   const value: CartContextType = {
     state,

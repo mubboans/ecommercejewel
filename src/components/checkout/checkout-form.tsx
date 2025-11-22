@@ -14,12 +14,13 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Mail, MapPin, CreditCard } from "lucide-react";
+import { toast } from "sonner";
 import { CURRENCY } from "@/constants";
 
 interface CheckoutFormProps {
   onSubmit: (formData: any) => void;
   isProcessing: boolean;
-  isStockValidated?: boolean; 
+  isStockValidated?: boolean;
 }
 
 interface FormData {
@@ -34,7 +35,7 @@ interface FormData {
   zipCode: string;
   country: string;
   shippingMethod: "standard" | "express" | "overnight";
-  paymentMethod: "card" | "paypal" | "applepay";
+  paymentMethod: "razorpay";
   cardNumber: string;
   expiryDate: string;
   cvv: string;
@@ -51,9 +52,7 @@ export function CheckoutForm({
 }: CheckoutFormProps) {
 
   const isFormDisabled = isProcessing || !isStockValidated;
-  const [activeStep, setActiveStep] = useState<
-    "contact" | "shipping" | "payment" | "review"
-  >("contact");
+  const [activeStep, setActiveStep] = useState<"contact" | "shipping">("contact");
   const [formData, setFormData] = useState<FormData>({
     email: "",
     phone: "",
@@ -66,14 +65,14 @@ export function CheckoutForm({
     zipCode: "",
     country: "India",
     shippingMethod: "standard",
-    paymentMethod: "card",
+    paymentMethod: "razorpay", // Default to Razorpay
     cardNumber: "",
     expiryDate: "",
     cvv: "",
     nameOnCard: "",
     notes: "",
     subscribeNewsletter: true,
-    agreeToTerms: false,
+    agreeToTerms: true, // Auto-agree since we are skipping review
   });
 
   const handleInputChange = (
@@ -86,21 +85,59 @@ export function CheckoutForm({
     }));
   };
 
+  const validateStep = (step: "contact" | "shipping") => {
+    if (step === "contact") {
+      if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+        toast.error("Please enter a valid email address");
+        return false;
+      }
+      if (!formData.phone || formData.phone.length < 10) {
+        toast.error("Please enter a valid phone number");
+        return false;
+      }
+      return true;
+    }
+
+    if (step === "shipping") {
+      const requiredFields: (keyof FormData)[] = [
+        "firstName",
+        "lastName",
+        "address",
+        "city",
+        "state",
+        "zipCode",
+        "country",
+      ];
+
+      for (const field of requiredFields) {
+        if (!formData[field]) {
+          toast.error(`Please fill in ${field.replace(/([A-Z])/g, " $1").toLowerCase()}`);
+          return false;
+        }
+      }
+      return true;
+    }
+
+    return true;
+  };
+
   const handleNextStep = () => {
-    if (activeStep === "contact") setActiveStep("shipping");
-    else if (activeStep === "shipping") setActiveStep("payment");
-    else if (activeStep === "payment") setActiveStep("review");
+    if (activeStep === "contact") {
+      if (validateStep("contact")) {
+        setActiveStep("shipping");
+      }
+    }
   };
 
   const handlePreviousStep = () => {
     if (activeStep === "shipping") setActiveStep("contact");
-    else if (activeStep === "payment") setActiveStep("shipping");
-    else if (activeStep === "review") setActiveStep("payment");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    if (validateStep("contact") && validateStep("shipping")) {
+      onSubmit(formData);
+    }
   };
 
   return (
@@ -303,128 +340,6 @@ export function CheckoutForm({
         </Card>
       )}
 
-      {/* Payment Information */}
-      {activeStep === "payment" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Payment Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <RadioGroup
-              value={formData.paymentMethod}
-              onValueChange={(value: "card" | "paypal" | "applepay") =>
-                handleInputChange("paymentMethod", value)
-              }
-              className="space-y-3"
-            >
-              <div className="flex items-center space-x-3 border rounded-lg p-4 hover:border-primary transition-colors">
-                <RadioGroupItem value="card" id="card" />
-                <Label
-                  htmlFor="card"
-                  className="flex-1 cursor-pointer font-medium"
-                >
-                  Credit/Debit Card
-                </Label>
-              </div>
-              <div className="flex items-center space-x-3 border rounded-lg p-4 hover:border-primary transition-colors">
-                <RadioGroupItem value="paypal" id="paypal" />
-                <Label
-                  htmlFor="paypal"
-                  className="flex-1 cursor-pointer font-medium"
-                >
-                  PayPal
-                </Label>
-              </div>
-              <div className="flex items-center space-x-3 border rounded-lg p-4 hover:border-primary transition-colors">
-                <RadioGroupItem value="applepay" id="applepay" />
-                <Label
-                  htmlFor="applepay"
-                  className="flex-1 cursor-pointer font-medium"
-                >
-                  Apple Pay
-                </Label>
-              </div>
-            </RadioGroup>
-
-            {formData.paymentMethod === "card" && (
-              <div className="space-y-4 pt-4 border-t">
-                <div className="grid gap-2">
-                  <Label htmlFor="cardNumber">Card Number *</Label>
-                  <Input
-                    id="cardNumber"
-                    placeholder="1234 5678 9012 3456"
-                    value={formData.cardNumber}
-                    onChange={(e) =>
-                      handleInputChange("cardNumber", e.target.value)
-                    }
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="expiryDate">Expiry Date *</Label>
-                    <Input
-                      id="expiryDate"
-                      placeholder="MM/YY"
-                      value={formData.expiryDate}
-                      onChange={(e) =>
-                        handleInputChange("expiryDate", e.target.value)
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="cvv">CVV *</Label>
-                    <Input
-                      id="cvv"
-                      placeholder="123"
-                      value={formData.cvv}
-                      onChange={(e) => handleInputChange("cvv", e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="nameOnCard">Name on Card *</Label>
-                  <Input
-                    id="nameOnCard"
-                    placeholder="John Doe"
-                    value={formData.nameOnCard}
-                    onChange={(e) =>
-                      handleInputChange("nameOnCard", e.target.value)
-                    }
-                    required
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-3 pt-4 border-t">
-              <div className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  id="subscribeNewsletter"
-                  checked={formData.subscribeNewsletter}
-                  onChange={(e) =>
-                    handleInputChange("subscribeNewsletter", e.target.checked)
-                  }
-                  className="rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <Label
-                  htmlFor="subscribeNewsletter"
-                  className="text-sm cursor-pointer"
-                >
-                  Subscribe to our newsletter for updates and exclusive offers
-                </Label>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Navigation Buttons */}
       <div className="flex gap-4 pt-4">
         {activeStep !== "contact" && (
@@ -436,18 +351,13 @@ export function CheckoutForm({
             Previous
           </button>
         )}
-        {activeStep !== "review" ? (
+        {activeStep !== "shipping" ? (
           <button
             type="button"
             onClick={handleNextStep}
             className="flex-1 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90"
           >
-            Continue to{" "}
-            {activeStep === "contact"
-              ? "Shipping"
-              : activeStep === "shipping"
-                ? "Payment"
-                : "Review"}
+            Continue to Shipping
           </button>
         ) : (
           <button
@@ -458,8 +368,8 @@ export function CheckoutForm({
             {!isStockValidated
               ? "Validating Items..."
               : isProcessing
-                ? "Creating Order..."
-                : "Place Order"}
+                ? "Processing Payment..."
+                : "Proceed to Pay"}
           </button>
         )}
       </div>
