@@ -112,8 +112,8 @@ export function AnalyticsDashboard({ detailed = false }) {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={(props) => {
-                        const { status, count } = props;
+                      label={(props: any) => {
+                        const { status, count } = props.payload;
                         return `${status}: ${count}`;
                       }}
                       outerRadius={80}
@@ -154,9 +154,9 @@ export function AnalyticsDashboard({ detailed = false }) {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={(props) => {
-                      const { name, value } = props;
-                      return `${name}: ${value}`;
+                    label={(props: any) => {
+                      const { method, count } = props.payload;
+                      return `${method}: ${count}`;
                     }}
                     outerRadius={80}
                     fill="#8884d8"
@@ -186,7 +186,7 @@ export function AnalyticsDashboard({ detailed = false }) {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" />
           <YAxis />
-          <Tooltip formatter={(value:any) => [`₹${value}`, "Sales"]} />
+          <Tooltip formatter={(value: any) => [`₹${value}`, "Sales"]} />
           <Line
             type="monotone"
             dataKey="sales"

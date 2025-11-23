@@ -2,11 +2,11 @@ import mongoose, { Schema } from 'mongoose';
 import { IUser } from '@/types';
 
 const AddressSchema = new Schema({
-  street: { type: String, trim: true },
-  city: { type: String, trim: true },
-  state: { type: String, trim: true },
-  zipCode: { type: String, trim: true },
-  country: { type: String, trim: true, default: 'India' },
+  street: { type: String, trim: true, required: true },
+  city: { type: String, trim: true, required: true },
+  state: { type: String, trim: true, required: true },
+  zipCode: { type: String, trim: true, required: true },
+  country: { type: String, trim: true, default: 'India', required: true },
   isDefault: { type: Boolean, default: false },
 }, { _id: true });
 
@@ -58,7 +58,7 @@ const UserSchema = new Schema<IUser>(
     },
     // Address management
     addresses: [AddressSchema],
-    
+
     // Account status
     isEmailVerified: {
       type: Boolean,
@@ -72,7 +72,7 @@ const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: true,
     },
-    
+
     // Shopping preferences
     preferences: {
       newsletter: { type: Boolean, default: true },
@@ -80,7 +80,7 @@ const UserSchema = new Schema<IUser>(
       emailNotifications: { type: Boolean, default: true },
       favoriteCategories: [String],
     },
-    
+
     // Loyalty and rewards
     loyaltyPoints: {
       type: Number,
@@ -97,7 +97,7 @@ const UserSchema = new Schema<IUser>(
       default: 0,
       min: 0,
     },
-    
+
     // Security and tracking
     lastLoginAt: {
       type: Date,
@@ -109,7 +109,7 @@ const UserSchema = new Schema<IUser>(
       type: Number,
       default: 0,
     },
-    
+
     // Social login data
     googleId: {
       type: String,
@@ -119,7 +119,7 @@ const UserSchema = new Schema<IUser>(
       type: String,
       sparse: true,
     },
-    
+
     // Account recovery
     resetPasswordToken: {
       type: String,
@@ -154,4 +154,4 @@ const UserSchema = new Schema<IUser>(
 
 // Email index is already created via unique: true in schema
 
-export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+export default (mongoose.models.User as mongoose.Model<IUser>) || mongoose.model<IUser>('User', UserSchema);

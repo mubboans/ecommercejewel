@@ -9,6 +9,11 @@ export default withAuth(
 
         // Admin routes protection
         if (pathname.startsWith('/admin') && token?.role !== 'admin') {
+            // If user is logged in but not admin, redirect to home
+            if (token) {
+                return NextResponse.redirect(new URL('/', req.url));
+            }
+            // If user is not logged in, redirect to signin
             const url = new URL('/auth/signin', req.url);
             url.searchParams.set('callbackUrl', req.nextUrl.pathname);
             url.searchParams.set('error', 'AccessDenied');

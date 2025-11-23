@@ -22,6 +22,20 @@ export function CheckoutContent() {
   const { state: cartState, createOrder, validateStock, clearCart } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [stockValidated, setStockValidated] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      if (status === "authenticated") {
+        const { getUserProfile } = await import("@/app/profile/actions");
+        const result = await getUserProfile();
+        if (result.user?.addresses) {
+          setSavedAddresses(result.user.addresses);
+        }
+      }
+    };
+    fetchAddresses();
+  }, [status]);
 
   // Validate stock on component mount
   useEffect(() => {
@@ -302,6 +316,7 @@ export function CheckoutContent() {
                   onSubmit={handleOrderSubmit}
                   isProcessing={isProcessing}
                   isStockValidated={stockValidated}
+                  savedAddresses={savedAddresses}
                 />
               </div>
 

@@ -11,7 +11,10 @@ import {
   Truck,
   FileText,
   Settings,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -67,6 +70,24 @@ const AdminDropdown = () => {
           >
             <Package className="h-4 w-4" />
             Products
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link
+            href="/admin/categories"
+            className="flex items-center gap-2 w-full"
+          >
+            <Package className="h-4 w-4" />
+            Categories
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link
+            href="/admin/banners"
+            className="flex items-center gap-2 w-full"
+          >
+            <FileText className="h-4 w-4" />
+            Banners
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
@@ -156,9 +177,11 @@ const DesktopUser = () => {
 const MobileSheet = () => {
   const { data: session } = useSession();
   const { state } = useCart();
+  const [open, setOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           variant="ghost"
@@ -169,157 +192,179 @@ const MobileSheet = () => {
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="left" className="w-[85vw] max-w-sm flex flex-col">
-        {/* Header */}
-        <div className="flex items-center gap-2 pb-4 border-b">
-          <ShoppingBag className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg">{SEO.SITE_NAME}</span>
+      <SheetContent side="left" className="w-[85vw] max-w-sm flex flex-col p-0">
+        {/* Header Section */}
+        <div className="p-6 border-b">
+          <div className="flex items-center gap-2 mb-6">
+            <ShoppingBag className="h-6 w-6 text-primary" />
+            <span className="font-bold text-xl">{SEO.SITE_NAME}</span>
+          </div>
+
+          {session ? (
+            <div className="flex items-center gap-3 bg-muted/50 p-3 rounded-lg">
+              <Avatar className="h-10 w-10 border-2 border-background">
+                <AvatarImage src={session.user?.image || ""} />
+                <AvatarFallback>{initials(session.user?.name)}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">
+                  {session.user?.name}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {session.user?.email}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <Button asChild className="w-full" onClick={() => setOpen(false)}>
+              <Link href="/auth/signin">Login / Sign Up</Link>
+            </Button>
+          )}
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto py-4">
-          <div className="flex flex-col gap-3">
-            {/* Navigation Links */}
+        <div className="flex-1 overflow-y-auto py-4 px-4">
+          <div className="flex flex-col gap-1">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">
+              Menu
+            </p>
             <Button
               asChild
               variant="ghost"
-              className="justify-start min-touch-target"
+              className="justify-start h-11 text-base font-medium"
+              onClick={() => setOpen(false)}
             >
               <Link href="/">Home</Link>
             </Button>
             <Button
               asChild
               variant="ghost"
-              className="justify-start min-touch-target"
+              className="justify-start h-11 text-base font-medium"
+              onClick={() => setOpen(false)}
             >
               <Link href="/products">Products</Link>
             </Button>
 
-            {session ? (
+            {session && (
               <>
-                <Separator />
-                <div className="flex items-center gap-3 rounded-md p-2">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={session.user?.image || ""} />
-                    <AvatarFallback>
-                      {initials(session.user?.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {session.user?.name}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {session.user?.email}
-                    </p>
-                  </div>
-                </div>
-
                 <Button
                   asChild
                   variant="ghost"
-                  className="justify-start min-touch-target"
+                  className="justify-start h-11 text-base font-medium"
+                  onClick={() => setOpen(false)}
                 >
-                  <Link href="/profile">Profile</Link>
+                  <Link href="/orders">My Orders</Link>
                 </Button>
                 <Button
                   asChild
                   variant="ghost"
-                  className="justify-start min-touch-target"
+                  className="justify-start h-11 text-base font-medium"
+                  onClick={() => setOpen(false)}
                 >
-                  <Link href="/orders">Orders</Link>
+                  <Link href="/profile">Profile Settings</Link>
                 </Button>
 
                 {session.user?.role === "admin" && (
-                  <>
-                    <Separator />
-                    <div className="px-2 py-1">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Admin
-                      </p>
-                    </div>
+                  <div className="mt-4">
                     <Button
-                      asChild
                       variant="ghost"
-                      className="justify-start min-touch-target"
+                      className="w-full justify-between h-11 text-base font-medium hover:bg-transparent"
+                      onClick={() => setAdminOpen(!adminOpen)}
                     >
-                      <Link href="/admin" className="flex items-center gap-2">
+                      <span className="flex items-center gap-2">
                         <Settings className="h-4 w-4" />
-                        Dashboard
-                      </Link>
+                        Admin Panel
+                      </span>
+                      {adminOpen ? (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      )}
                     </Button>
-                    <Button
-                      asChild
-                      variant="ghost"
-                      className="justify-start min-touch-target"
-                    >
-                      <Link
-                        href="/admin/products"
-                        className="flex items-center gap-2"
-                      >
-                        <Package className="h-4 w-4" />
-                        Products
-                      </Link>
-                    </Button>
-                    <Button
-                      asChild
-                      variant="ghost"
-                      className="justify-start min-touch-target"
-                    >
-                      <Link
-                        href="/admin/refund"
-                        className="flex items-center gap-2"
-                      >
-                        <FileText className="h-4 w-4" />
-                        Refund
-                      </Link>
-                    </Button>
-                    <Button
-                      asChild
-                      variant="ghost"
-                      className="justify-start min-touch-target"
-                    >
-                      <Link
-                        href="/admin/shipping"
-                        className="flex items-center gap-2"
-                      >
-                        <Truck className="h-4 w-4" />
-                        Shipping
-                      </Link>
-                    </Button>
-                    <Button
-                      asChild
-                      variant="ghost"
-                      className="justify-start min-touch-target"
-                    >
-                      {/* <Link
-                        href="/admin/content"
-                        className="flex items-center gap-2"
-                      >
-                        <Settings className="h-4 w-4" />
-                        Website Content
-                      </Link> */}
-                    </Button>
-                  </>
-                )}
 
-                <Separator />
-                <Button
-                  variant="ghost"
-                  className="justify-start text-red-600 dark:text-red-400 min-touch-target"
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </Button>
+                    {adminOpen && (
+                      <div className="ml-4 flex flex-col gap-1 mt-1 border-l-2 pl-2">
+                        <Button
+                          asChild
+                          variant="ghost"
+                          className="justify-start h-10 text-sm"
+                          onClick={() => setOpen(false)}
+                        >
+                          <Link href="/admin">Dashboard</Link>
+                        </Button>
+                        <Button
+                          asChild
+                          variant="ghost"
+                          className="justify-start h-10 text-sm"
+                          onClick={() => setOpen(false)}
+                        >
+                          <Link href="/admin/products">Products</Link>
+                        </Button>
+                        <Button
+                          asChild
+                          variant="ghost"
+                          className="justify-start h-10 text-sm"
+                          onClick={() => setOpen(false)}
+                        >
+                          <Link href="/admin/categories">Categories</Link>
+                        </Button>
+                        <Button
+                          asChild
+                          variant="ghost"
+                          className="justify-start h-10 text-sm"
+                          onClick={() => setOpen(false)}
+                        >
+                          <Link href="/admin/banners">Banners</Link>
+                        </Button>
+                        <Button
+                          asChild
+                          variant="ghost"
+                          className="justify-start h-10 text-sm"
+                          onClick={() => setOpen(false)}
+                        >
+                          <Link href="/admin/orders">Orders</Link>
+                        </Button>
+                        <Button
+                          asChild
+                          variant="ghost"
+                          className="justify-start h-10 text-sm"
+                          onClick={() => setOpen(false)}
+                        >
+                          <Link href="/admin/refund">Refunds</Link>
+                        </Button>
+                        <Button
+                          asChild
+                          variant="ghost"
+                          className="justify-start h-10 text-sm"
+                          onClick={() => setOpen(false)}
+                        >
+                          <Link href="/admin/shipping">Shipping</Link>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
-            ) : (
-              <Button asChild className="min-touch-target mt-4">
-                <Link href="/auth/signin">Login</Link>
-              </Button>
             )}
           </div>
         </div>
+
+        {/* Footer */}
+        {session && (
+          <div className="p-4 border-t bg-muted/10">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+              onClick={() => {
+                setOpen(false);
+                signOut({ callbackUrl: "/" });
+              }}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Log Out
+            </Button>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

@@ -1,7 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
- 
+
 import { Document } from 'mongoose';
-export interface IUser extends Document {
+export interface IAddress {
+  _id?: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  isDefault: boolean;
+}
+
+export interface IUser extends Omit<Document, '_id'> {
   _id: string;
   name: string;
   email: string;
@@ -11,7 +21,7 @@ export interface IUser extends Document {
   dateOfBirth?: Date;
   gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
   avatar?: string;
-  addresses?: Array<any>;
+  addresses?: IAddress[];
   isEmailVerified?: boolean;
   isPhoneVerified?: boolean;
   isActive?: boolean;
@@ -33,11 +43,12 @@ export interface IUser extends Document {
   resetPasswordExpiry?: Date;
   emailVerificationToken?: string;
   emailVerificationExpiry?: Date;
+  image?: string,
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface IProduct extends Document {
+export interface IProduct extends Omit<Document, '_id'> {
   _id: string;
   name: string;
   description: string;
@@ -74,25 +85,25 @@ export interface IOrderLog {
   updatedBy?: string;
 }
 
-export type OrderStatus = 
-  | 'created' 
-  | 'paid' 
-  | 'confirmed' 
-  | 'processing' 
-  | 'shipped' 
-  | 'delivered' 
+export type OrderStatus =
+  | 'created'
+  | 'paid'
+  | 'confirmed'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
   | 'returned'
   | 'refunded'
   | 'cancelled';
 
-export type PaymentStatus = 
-  | 'pending' 
-  | 'completed' 
-  | 'failed' 
+export type PaymentStatus =
+  | 'pending'
+  | 'completed'
+  | 'failed'
   | 'refunded';
 
 export interface IOrder extends Document {
-//   _id: string;
+  //   _id: string;
   userId: string;
   items: IOrderItem[];
   subtotal: number;

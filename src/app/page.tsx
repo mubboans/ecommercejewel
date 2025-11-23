@@ -15,10 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { MainLayout } from "@/components/layout/main-layout";
 import { CURRENCY } from "@/constants";
 import logo from "../../public/images/logo.png";
-import connectDB from "@/lib/db/mongodb";
-import Product from "@/models/Product";
 import { getProducts } from "./admin/products/actions";
-import ProductsPage from "./products/page";
+import { getActiveBanners } from "./admin/banners/actions";
 // Featured handmade jewelry products
 // const featuredProducts = [
 //   {
@@ -86,15 +84,18 @@ const features = [
 ];
 
 export default async function Home() {
-    const featuredProducts = (await getProducts())?.map((product: any) => ({
-      ...product,
-      // Ensure the product matches the Product type structure
-      id: product._id,
-    }));
-    console.log(featuredProducts,"featuredProducts");
-    
+  const featuredProducts = (await getProducts())?.map((product: any) => ({
+    ...product,
+    // Ensure the product matches the Product type structure
+    id: product._id,
+  }));
+  // console.log(featuredProducts, "featuredProducts");
+
+  const bannersResult = await getActiveBanners();
+  const activeBanners = bannersResult.banners || [];
+
   return (
-    <MainLayout>
+    <MainLayout banners={activeBanners}>
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-background py-12 lg:py-32">
         <div className="container mx-auto px-4">
@@ -247,11 +248,10 @@ export default async function Home() {
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`h-3 w-3 sm:h-4 sm:w-4 ${
-                              i < Math.floor(product.rating)
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "text-gray-300"
-                            }`}
+                            className={`h-3 w-3 sm:h-4 sm:w-4 ${i < Math.floor(product.rating)
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-300"
+                              }`}
                           />
                         ))}
                       </div>

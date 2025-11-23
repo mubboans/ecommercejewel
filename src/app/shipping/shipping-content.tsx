@@ -377,7 +377,7 @@ export function ShippingPageContent() {
                       <CardContent>
                         <p className="text-sm text-muted-foreground mb-4">
                           Currently, we only ship within India. International
-                          shipping coming soon!
+                          shipping will be available soon!
                         </p>
                         <Badge
                           variant="outline"

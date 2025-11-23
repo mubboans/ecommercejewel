@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { Mail, MapPin, CreditCard } from "lucide-react";
+import { Mail, MapPin, CreditCard, Plus, Check } from "lucide-react";
 import { toast } from "sonner";
 import { CURRENCY } from "@/constants";
 
@@ -21,6 +21,7 @@ interface CheckoutFormProps {
   onSubmit: (formData: any) => void;
   isProcessing: boolean;
   isStockValidated?: boolean;
+  savedAddresses?: any[];
 }
 
 interface FormData {
@@ -49,10 +50,12 @@ export function CheckoutForm({
   onSubmit,
   isProcessing,
   isStockValidated = true,
+  savedAddresses = [],
 }: CheckoutFormProps) {
 
   const isFormDisabled = isProcessing || !isStockValidated;
   const [activeStep, setActiveStep] = useState<"contact" | "shipping">("contact");
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("new");
   const [formData, setFormData] = useState<FormData>({
     email: "",
     phone: "",
@@ -65,15 +68,60 @@ export function CheckoutForm({
     zipCode: "",
     country: "India",
     shippingMethod: "standard",
-    paymentMethod: "razorpay", // Default to Razorpay
+    paymentMethod: "razorpay",
     cardNumber: "",
     expiryDate: "",
     cvv: "",
     nameOnCard: "",
     notes: "",
     subscribeNewsletter: true,
-    agreeToTerms: true, // Auto-agree since we are skipping review
+    agreeToTerms: true,
   });
+
+  // Auto-select default address on mount
+  useEffect(() => {
+    if (savedAddresses.length > 0) {
+      const defaultAddress = savedAddresses.find(addr => addr.isDefault) || savedAddresses[0];
+      if (defaultAddress) {
+        setSelectedAddressId(defaultAddress._id);
+        setFormData(prev => ({
+          ...prev,
+          address: defaultAddress.street,
+          city: defaultAddress.city,
+          state: defaultAddress.state,
+          zipCode: defaultAddress.zipCode,
+          country: defaultAddress.country,
+        }));
+      }
+    }
+  }, [savedAddresses]);
+
+  const handleAddressSelect = (addressId: string) => {
+    setSelectedAddressId(addressId);
+    if (addressId === "new") {
+      setFormData(prev => ({
+        ...prev,
+        address: "",
+        apartment: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        country: "India",
+      }));
+    } else {
+      const address = savedAddresses.find(a => a._id === addressId);
+      if (address) {
+        setFormData(prev => ({
+          ...prev,
+          address: address.street,
+          city: address.city,
+          state: address.state,
+          zipCode: address.zipCode,
+          country: address.country,
+        }));
+      }
+    }
+  };
 
   const handleInputChange = (
     field: keyof FormData,
@@ -189,95 +237,160 @@ export function CheckoutForm({
               <MapPin className="h-5 w-5" />
               Shipping Address
             </CardTitle>
+            <CardDescription>
+              {savedAddresses.length > 0
+                ? "Select a saved address or add a new one"
+                : "Enter your shipping details"}
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="firstName">First Name *</Label>
-                <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) =>
-                    handleInputChange("firstName", e.target.value)
-                  }
-                  required
-                />
+          <CardContent className="space-y-6">
+            {savedAddresses.length > 0 && (
+              <div className="space-y-4">
+                <Label className="text-base font-medium">Saved Addresses</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {savedAddresses.map((addr) => (
+                    <div
+                      key={addr._id}
+                      className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all ${selectedAddressId === addr._id
+                          ? "border-primary bg-primary/5 shadow-sm"
+                          : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                        }`}
+                      onClick={() => handleAddressSelect(addr._id)}
+                    >
+                      {selectedAddressId === addr._id && (
+                        <div className="absolute top-3 right-3 bg-primary text-white rounded-full p-1">
+                          <Check className="h-3 w-3" />
+                        </div>
+                      )}
+                      <div className="space-y-1">
+                        <p className="font-medium text-sm">{addr.street}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {addr.city}, {addr.state} {addr.zipCode}
+                        </p>
+                        <p className="text-sm text-muted-foreground">{addr.country}</p>
+                        {addr.isDefault && (
+                          <span className="inline-block mt-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                            Default
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <div
+                    className={`relative border-2 border-dashed rounded-lg p-4 cursor-pointer transition-all flex flex-col items-center justify-center min-h-[120px] ${selectedAddressId === "new"
+                        ? "border-primary bg-primary/5"
+                        : "border-gray-300 hover:border-gray-400"
+                      }`}
+                    onClick={() => handleAddressSelect("new")}
+                  >
+                    <Plus className="h-6 w-6 text-muted-foreground mb-2" />
+                    <p className="font-medium text-sm">Add New Address</p>
+                  </div>
+                </div>
+                {selectedAddressId !== "new" && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-600" />
+                    <p className="text-sm text-green-800">
+                      Order will be delivered to the selected address
+                    </p>
+                  </div>
+                )}
+                <Separator />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="lastName">Last Name *</Label>
-                <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) =>
-                    handleInputChange("lastName", e.target.value)
-                  }
-                  required
-                />
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="address">Address *</Label>
-              <Input
-                id="address"
-                placeholder="Street address"
-                value={formData.address}
-                onChange={(e) => handleInputChange("address", e.target.value)}
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="apartment">
-                Apartment, Suite, etc. (Optional)
-              </Label>
-              <Input
-                id="apartment"
-                placeholder="Apartment, suite, unit, etc."
-                value={formData.apartment}
-                onChange={(e) => handleInputChange("apartment", e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="city">City *</Label>
-                <Input
-                  id="city"
-                  value={formData.city}
-                  onChange={(e) => handleInputChange("city", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="state">State *</Label>
-                <Input
-                  id="state"
-                  value={formData.state}
-                  onChange={(e) => handleInputChange("state", e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="zipCode">ZIP Code *</Label>
-                <Input
-                  id="zipCode"
-                  value={formData.zipCode}
-                  onChange={(e) => handleInputChange("zipCode", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="country">Country *</Label>
-                <Input
-                  id="country"
-                  value={formData.country}
-                  onChange={(e) => handleInputChange("country", e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+            )}
 
-            <Separator className="my-4" />
+            {/* Show form fields only when "new" is selected or no saved addresses */}
+            {(selectedAddressId === "new" || savedAddresses.length === 0) && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="firstName">First Name *</Label>
+                    <Input
+                      id="firstName"
+                      value={formData.firstName}
+                      onChange={(e) =>
+                        handleInputChange("firstName", e.target.value)
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Input
+                      id="lastName"
+                      value={formData.lastName}
+                      onChange={(e) =>
+                        handleInputChange("lastName", e.target.value)
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="address">Address *</Label>
+                  <Input
+                    id="address"
+                    placeholder="Street address"
+                    value={formData.address}
+                    onChange={(e) => handleInputChange("address", e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="apartment">
+                    Apartment, Suite, etc. (Optional)
+                  </Label>
+                  <Input
+                    id="apartment"
+                    placeholder="Apartment, suite, unit, etc."
+                    value={formData.apartment}
+                    onChange={(e) => handleInputChange("apartment", e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="city">City *</Label>
+                    <Input
+                      id="city"
+                      value={formData.city}
+                      onChange={(e) => handleInputChange("city", e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="state">State *</Label>
+                    <Input
+                      id="state"
+                      value={formData.state}
+                      onChange={(e) => handleInputChange("state", e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="zipCode">ZIP Code *</Label>
+                    <Input
+                      id="zipCode"
+                      value={formData.zipCode}
+                      onChange={(e) => handleInputChange("zipCode", e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="country">Country *</Label>
+                    <Input
+                      id="country"
+                      value={formData.country}
+                      onChange={(e) => handleInputChange("country", e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+              </>
+            )}
 
             <div className="space-y-4">
               <Label className="text-base font-medium">Shipping Method</Label>
