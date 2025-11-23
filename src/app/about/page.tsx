@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+
 import { MainLayout } from '@/components/layout/main-layout';
 import { SEO } from '@/constants';
 
@@ -19,21 +19,21 @@ export default function AboutPage() {
               <div>
                 <h2 className="text-3xl font-bold mb-4">Our Story</h2>
                 <p className="text-muted-foreground mb-4">
-                  Founded with a passion for creating unique, handcrafted jewelry, {SEO.SITE_NAME} has been 
+                  Founded with a passion for creating unique, handcrafted jewelry, {SEO.SITE_NAME} has been
                   bringing beautiful, personalized pieces to life for jewelry lovers everywhere.
                 </p>
                 <p className="text-muted-foreground mb-4">
-                  Each piece in our collection is carefully handcrafted by skilled artisans who pour their 
+                  Each piece in our collection is carefully handcrafted by skilled artisans who pour their
                   heart and soul into every creation. We believe that jewelry should tell a story - your story.
                 </p>
                 <p className="text-muted-foreground">
-                  From delicate everyday pieces to statement jewelry for special occasions, we create 
+                  From delicate everyday pieces to statement jewelry for special occasions, we create
                   accessories that complement your unique style and personality.
                 </p>
               </div>
               <div className="relative">
-                <img 
-                  src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=400&fit=crop" 
+                <img
+                  src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=400&fit=crop"
                   alt="Handcrafted jewelry making process"
                   className="rounded-lg shadow-lg"
                 />
@@ -50,7 +50,7 @@ export default function AboutPage() {
                   We use only the finest materials including genuine gems, pearls, and quality metals
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">✨</span>
@@ -60,7 +60,7 @@ export default function AboutPage() {
                   Every piece is individually crafted by hand, ensuring unique character and quality
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">💖</span>
@@ -75,7 +75,7 @@ export default function AboutPage() {
             <div className="text-center bg-muted/30 rounded-lg p-8">
               <h2 className="text-3xl font-bold mb-4">Our Mission</h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                To create beautiful, meaningful jewelry that celebrates life&apos;s special moments and 
+                To create beautiful, meaningful jewelry that celebrates life&apos;s special moments and
                 empowers individuals to express their unique style with confidence and elegance.
               </p>
             </div>

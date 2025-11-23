@@ -40,7 +40,14 @@ interface Order {
     total: number;
     status: string;
     createdAt: string;
-    items: any[];
+
+    items: {
+        productId: string;
+        name: string;
+        price: number;
+        quantity: number;
+        image: string;
+    }[];
 }
 
 interface OrdersTableProps {
