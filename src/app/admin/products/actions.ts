@@ -26,6 +26,8 @@ export async function getProducts(id?: string) {
 // In your actions.js - make sure it handles the productImages array properly
 export async function createProduct(data: Omit<IProduct | any, "_id" | "createdAt" | "updatedAt">) {
     try {
+        await connectDB();
+
         // Convert array specifications to object format
         const specificationsArray = data.specifications as any[];
         const specificationsObject: Record<string, string> = {};
@@ -65,12 +67,14 @@ export async function updateProduct(
     id: string,
     data: Partial<Omit<IProduct, "_id" | "createdAt" | "updatedAt">>
 ) {
+    await connectDB();
     await Product.findByIdAndUpdate(id, data);
     revalidatePath("/admin/products");
     revalidatePath("/products");
 }
 
 export async function deleteProduct(id: string) {
+    await connectDB();
     await Product.findByIdAndDelete(id);
     revalidatePath("/admin/products");
     revalidatePath("/products");
