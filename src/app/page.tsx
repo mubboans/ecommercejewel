@@ -124,14 +124,14 @@ export default async function Home() {
                     <Sparkles className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                   </Link>
                 </Button>
-                <Button
+                {/* <Button
                   variant="outline"
                   asChild
                   size="lg"
                   className="text-base sm:text-lg px-6 sm:px-8 min-touch-target"
                 >
                   <Link href="/custom">Custom Orders</Link>
-                </Button>
+                </Button> */}
               </div>
 
               <div className="flex flex-wrap justify-center lg:justify-start gap-4 sm:gap-8 text-sm text-muted-foreground">
