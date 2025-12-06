@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth.config";
 import { getCategories } from "./actions";
 import { ICategory } from "@/models/Category";
+import { getActiveBanners } from "../banners/actions";
+
+export const dynamic = 'force-dynamic';
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -20,8 +23,11 @@ export default async function CategoriesPage() {
     const result = await getCategories();
     const categories = result.categories || [];
 
+    const bannersForLayout = await getActiveBanners();
+    const activeBanners = bannersForLayout.banners || [];
+
     return (
-        <MainLayout>
+        <MainLayout banners={activeBanners}>
             <div className="min-h-screen bg-gray-50/30 py-6">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="space-y-6">

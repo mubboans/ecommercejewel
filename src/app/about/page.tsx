@@ -1,10 +1,16 @@
 
 import { MainLayout } from '@/components/layout/main-layout';
 import { SEO } from '@/constants';
+import { getActiveBanners } from '../admin/banners/actions';
 
-export default function AboutPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function AboutPage() {
+  const bannersResult = await getActiveBanners();
+  const activeBanners = bannersResult.banners || [];
+
   return (
-    <MainLayout>
+    <MainLayout banners={activeBanners}>
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">

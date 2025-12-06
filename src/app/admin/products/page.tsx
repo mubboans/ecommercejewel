@@ -1,4 +1,7 @@
 'use client';
+
+export const dynamic = 'force-dynamic';
+
 // import { revalidatePath } from "next/cache";
 import { deleteProduct, updateProduct } from "./actions";
 import { ProductTable } from "./product-table";

@@ -3,6 +3,8 @@ import { getProducts } from "../actions";
 import EditForm from "./edit/page";
 import { toast } from "sonner";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Converts a Mongoose document (or any complex object)
  * into a plain JS object safe to send to the client.
