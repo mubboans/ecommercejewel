@@ -7,6 +7,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BannerForm } from "@/components/admin/banner-form";
 
+// Force dynamic rendering since this page uses getServerSession() which calls headers()
+export const dynamic = "force-dynamic";
+
 export default async function BannerEditPage({
     params,
 }: {

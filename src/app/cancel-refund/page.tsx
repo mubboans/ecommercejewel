@@ -3,6 +3,8 @@ import { CancelRefundContent } from "./cancel-refund-content";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth.config";
 
+// Force dynamic rendering since this page uses getServerSession() which calls headers()
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Cancel & Refund Request | Your Jewellery Store",

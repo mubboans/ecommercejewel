@@ -4,6 +4,9 @@ import { AddressList } from "@/components/profile/address-list";
 import { getUserProfile } from "./actions";
 import { redirect } from "next/navigation";
 
+// Force dynamic rendering since this page uses getServerSession() which calls headers()
+export const dynamic = "force-dynamic";
+
 export default async function ProfilePage() {
     const { user, error } = await getUserProfile();
 
