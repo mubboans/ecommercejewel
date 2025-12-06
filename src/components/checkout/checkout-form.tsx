@@ -235,18 +235,50 @@ export function CheckoutForm({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5" />
-              Shipping Address
+              Shipping Information
             </CardTitle>
             <CardDescription>
-              {savedAddresses.length > 0
-                ? "Select a saved address or add a new one"
-                : "Enter your shipping details"}
+              Enter your details and select delivery address
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Always show user details - Required for order */}
+            <div className="space-y-4">
+              <Label className="text-base font-medium">Your Details</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="firstName">First Name *</Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) =>
+                      handleInputChange("firstName", e.target.value)
+                    }
+                    required
+                    placeholder="John"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Input
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) =>
+                      handleInputChange("lastName", e.target.value)
+                    }
+                    required
+                    placeholder="Doe"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Address Selection */}
             {savedAddresses.length > 0 && (
               <div className="space-y-4">
-                <Label className="text-base font-medium">Saved Addresses</Label>
+                <Label className="text-base font-medium">Delivery Address</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {savedAddresses.map((addr) => (
                     <div
@@ -295,102 +327,86 @@ export function CheckoutForm({
                     </p>
                   </div>
                 )}
-                <Separator />
               </div>
             )}
 
-            {/* Show form fields only when "new" is selected or no saved addresses */}
+            {/* Show address form fields only when "new" is selected or no saved addresses */}
             {(selectedAddressId === "new" || savedAddresses.length === 0) && (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {savedAddresses.length > 0 && <Separator />}
+                <div className="space-y-4">
+                  {savedAddresses.length === 0 && (
+                    <Label className="text-base font-medium">Delivery Address</Label>
+                  )}
                   <div className="grid gap-2">
-                    <Label htmlFor="firstName">First Name *</Label>
+                    <Label htmlFor="address">Street Address *</Label>
                     <Input
-                      id="firstName"
-                      value={formData.firstName}
-                      onChange={(e) =>
-                        handleInputChange("firstName", e.target.value)
-                      }
+                      id="address"
+                      placeholder="123 Main Street"
+                      value={formData.address}
+                      onChange={(e) => handleInputChange("address", e.target.value)}
                       required
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Label htmlFor="apartment">
+                      Apartment, Suite, etc. (Optional)
+                    </Label>
                     <Input
-                      id="lastName"
-                      value={formData.lastName}
-                      onChange={(e) =>
-                        handleInputChange("lastName", e.target.value)
-                      }
-                      required
+                      id="apartment"
+                      placeholder="Apt 4B, Suite 100, etc."
+                      value={formData.apartment}
+                      onChange={(e) => handleInputChange("apartment", e.target.value)}
                     />
                   </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="address">Address *</Label>
-                  <Input
-                    id="address"
-                    placeholder="Street address"
-                    value={formData.address}
-                    onChange={(e) => handleInputChange("address", e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="apartment">
-                    Apartment, Suite, etc. (Optional)
-                  </Label>
-                  <Input
-                    id="apartment"
-                    placeholder="Apartment, suite, unit, etc."
-                    value={formData.apartment}
-                    onChange={(e) => handleInputChange("apartment", e.target.value)}
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="city">City *</Label>
-                    <Input
-                      id="city"
-                      value={formData.city}
-                      onChange={(e) => handleInputChange("city", e.target.value)}
-                      required
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="city">City *</Label>
+                      <Input
+                        id="city"
+                        placeholder="Mumbai"
+                        value={formData.city}
+                        onChange={(e) => handleInputChange("city", e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="state">State *</Label>
+                      <Input
+                        id="state"
+                        placeholder="Maharashtra"
+                        value={formData.state}
+                        onChange={(e) => handleInputChange("state", e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="state">State *</Label>
-                    <Input
-                      id="state"
-                      value={formData.state}
-                      onChange={(e) => handleInputChange("state", e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="zipCode">ZIP Code *</Label>
-                    <Input
-                      id="zipCode"
-                      value={formData.zipCode}
-                      onChange={(e) => handleInputChange("zipCode", e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="country">Country *</Label>
-                    <Input
-                      id="country"
-                      value={formData.country}
-                      onChange={(e) => handleInputChange("country", e.target.value)}
-                      required
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="zipCode">ZIP Code *</Label>
+                      <Input
+                        id="zipCode"
+                        placeholder="400001"
+                        value={formData.zipCode}
+                        onChange={(e) => handleInputChange("zipCode", e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="country">Country *</Label>
+                      <Input
+                        id="country"
+                        value={formData.country}
+                        onChange={(e) => handleInputChange("country", e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
-
-                <Separator />
               </>
             )}
+
+            <Separator />
 
             <div className="space-y-4">
               <Label className="text-base font-medium">Shipping Method</Label>

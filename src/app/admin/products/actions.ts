@@ -15,7 +15,12 @@ export async function getProducts(id?: string) {
             }
             return Product.findById(id).lean();
         }
-        return Product.find().lean();
+        // Optimize query: select only needed fields and use lean() for better performance
+        return Product.find()
+            .select('-__v') // Exclude version key
+            .sort({ createdAt: -1 }) // Most recent first
+            .lean() // Return plain JavaScript objects instead of Mongoose documents
+            .exec();
     } catch (error) {
         console.error("❌ Error fetching products:", error);
         return null;

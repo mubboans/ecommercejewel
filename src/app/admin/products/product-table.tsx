@@ -64,281 +64,281 @@ const getProductColumns = (
   onDeleteProduct: (productId: string) => Promise<void>,
   setProductToDelete: (product: IProduct | null) => void
 ): ColumnDef<IProduct>[] => [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "productImages",
-    header: "Image",
-    cell: ({ row }) => {
-      const productImages = row.getValue("productImages") as string[];
-      const firstImage =
-        productImages && productImages[0] ? productImages[0].trim() : "";
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "productImages",
+      header: "Image",
+      cell: ({ row }) => {
+        const productImages = row.getValue("productImages") as string[];
+        const firstImage =
+          productImages && productImages[0] ? productImages[0].trim() : "";
 
-      // Optimize Cloudinary image URL
-      const optimizedImage = firstImage
-        ? firstImage.replace(
+        // Optimize Cloudinary image URL
+        const optimizedImage = firstImage
+          ? firstImage.replace(
             "/upload/",
             "/upload/w_100,h_100,c_fill,q_auto,f_auto/"
           )
-        : "";
+          : "";
 
-      return (
-        <div className="flex items-center justify-center">
-          {firstImage ? (
-            <img
-              src={optimizedImage}
-              alt={row.getValue("name")}
-              className="h-12 w-12 rounded-md object-cover"
-              onError={(e) => {
-                e.currentTarget.src = "/placeholder-product.png";
-              }}
-            />
-          ) : (
-            <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">
-              <span className="text-xs text-muted-foreground">No Image</span>
-            </div>
-          )}
-        </div>
-      );
+        return (
+          <div className="flex items-center justify-center">
+            {firstImage ? (
+              <img
+                src={optimizedImage}
+                alt={row.getValue("name")}
+                className="h-12 w-12 rounded-md object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = "/placeholder-product.png";
+                }}
+              />
+            ) : (
+              <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">
+                <span className="text-xs text-muted-foreground">No Image</span>
+              </div>
+            )}
+          </div>
+        );
+      },
+      enableSorting: false,
     },
-    enableSorting: false,
-  },
-  {
-    accessorKey: "name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-xs sm:text-sm font-medium"
-        >
-          Product Name
-          <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const name = row.getValue("name") as string;
-      return (
-        <div
-          className="font-medium text-xs sm:text-sm max-w-[200px] truncate"
-          title={name}
-        >
-          {name}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "category",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-xs sm:text-sm font-medium"
-        >
-          Category
-          <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="capitalize text-xs sm:text-sm">
-        {row.getValue("category")}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "price",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="w-full justify-end text-xs sm:text-sm font-medium"
-        >
-          Price
-          <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const price = parseFloat(row.getValue("price"));
-      const originalPrice = row.original.originalPrice;
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(price / 100); // Divide by 100 since price is in cents
-
-      return (
-        <div className="text-right">
-          <div className="font-medium text-xs sm:text-sm">{formatted}</div>
-          {originalPrice && originalPrice > price && (
-            <div className="text-xs text-muted-foreground line-through">
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-              }).format(originalPrice / 100)}
-            </div>
-          )}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "rating",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-xs sm:text-sm font-medium"
-        >
-          Rating
-          <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const rating = row.getValue("rating") as number;
-      const reviews = row.original.reviews;
-      return (
-        <div className="flex items-center gap-1">
-          <span className="font-medium text-xs sm:text-sm">
-            ⭐ {rating?.toFixed(1) || "0.0"}
-          </span>
-          {reviews && (
-            <span className="text-xs text-muted-foreground">({reviews})</span>
-          )}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "stockCount",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-xs sm:text-sm font-medium"
-        >
-          Stock
-          <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const stockCount = row.getValue("stockCount") as number;
-      const inStock = row.original.inStock;
-
-      return (
-        <div className="flex items-center gap-2">
-          <Badge
-            variant={inStock && stockCount > 0 ? "default" : "destructive"}
-            className="text-xs"
+    {
+      accessorKey: "name",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="text-xs sm:text-sm font-medium"
           >
-            {inStock && stockCount > 0 ? `${stockCount} units` : "Out of Stock"}
-          </Badge>
+            Product Name
+            <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const name = row.getValue("name") as string;
+        return (
+          <div
+            className="font-medium text-xs sm:text-sm max-w-[200px] truncate"
+            title={name}
+          >
+            {name}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "category",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="text-xs sm:text-sm font-medium"
+          >
+            Category
+            <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="capitalize text-xs sm:text-sm">
+          {row.getValue("category")}
         </div>
-      );
+      ),
     },
-  },
-  {
-    accessorKey: "badge",
-    header: "Badge",
-    cell: ({ row }) => {
-      const badge = row.getValue("badge") as string;
-      if (!badge) return null;
+    {
+      accessorKey: "price",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="w-full justify-end text-xs sm:text-sm font-medium"
+          >
+            Price
+            <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const price = parseFloat(row.getValue("price"));
+        const originalPrice = row.original.originalPrice;
+        const formatted = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        }).format(price / 100); // Divide by 100 since price is in cents
 
-      return (
-        <Badge variant="secondary" className="capitalize text-xs">
-          {badge}
-        </Badge>
-      );
+        return (
+          <div className="text-right">
+            <div className="font-medium text-xs sm:text-sm">{formatted}</div>
+            {originalPrice && originalPrice > price && (
+              <div className="text-xs text-muted-foreground line-through">
+                {new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                }).format(originalPrice / 100)}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
-  },
-  {
-    id: "actions",
-    header: "Actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const product = row.original;
+    {
+      accessorKey: "rating",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="text-xs sm:text-sm font-medium"
+          >
+            Rating
+            <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const rating = row.getValue("rating") as number;
+        const reviews = row.original.reviews;
+        return (
+          <div className="flex items-center gap-1">
+            <span className="font-medium text-xs sm:text-sm">
+              ⭐ {rating?.toFixed(1) || "0.0"}
+            </span>
+            {reviews && (
+              <span className="text-xs text-muted-foreground">({reviews})</span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "stockCount",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="text-xs sm:text-sm font-medium"
+          >
+            Stock
+            <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const stockCount = row.getValue("stockCount") as number;
+        const inStock = row.original.inStock;
 
-      const handleDeleteClick = () => {
-        setProductToDelete(product);
-      };
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel className="text-sm">Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(product._id)}
-              className="text-sm cursor-pointer"
+        return (
+          <div className="flex items-center gap-2">
+            <Badge
+              variant={inStock && stockCount > 0 ? "default" : "destructive"}
+              className="text-xs"
             >
-              Copy Product ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="text-sm cursor-pointer">
-              <Link
-                href={`/admin/products/${product._id}`}
-                className="flex items-center w-full"
-              >
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit Product
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild className="text-sm cursor-pointer">
-              <Link
-                href={`/products/${product._id}`}
-                className="flex items-center w-full"
-              >
-                <Eye className="mr-2 h-4 w-4" />
-                View Product
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={handleDeleteClick}
-              className="text-destructive focus:text-destructive text-sm cursor-pointer"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete Product
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+              {inStock && stockCount > 0 ? `${stockCount} units` : "Out of Stock"}
+            </Badge>
+          </div>
+        );
+      },
     },
-  },
-];
+    {
+      accessorKey: "badge",
+      header: "Badge",
+      cell: ({ row }) => {
+        const badge = row.getValue("badge") as string;
+        if (!badge) return null;
+
+        return (
+          <Badge variant="secondary" className="capitalize text-xs">
+            {badge}
+          </Badge>
+        );
+      },
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const product = row.original;
+
+        const handleDeleteClick = () => {
+          setProductToDelete(product);
+        };
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel className="text-sm">Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(product._id)}
+                className="text-sm cursor-pointer"
+              >
+                Copy Product ID
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild className="text-sm cursor-pointer">
+                <Link
+                  href={`/admin/products/${product._id}`}
+                  className="flex items-center w-full"
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit Product
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="text-sm cursor-pointer">
+                <Link
+                  href={`/products/${product._id}`}
+                  className="flex items-center w-full"
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Product
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleDeleteClick}
+                className="text-destructive focus:text-destructive text-sm cursor-pointer"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Product
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
 
 interface ProductTableProps {
   initialProducts?: IProduct[];
@@ -534,12 +534,12 @@ export function ProductTable({
             </Button>
           )}
 
-          {onAddProduct && (
+          {/* {onAddProduct && (
             <Button onClick={onAddProduct} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add Product
             </Button>
-          )}
+          )} */}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -582,9 +582,9 @@ export function ProductTable({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   );
                 })}
@@ -618,7 +618,7 @@ export function ProductTable({
                   colSpan={
                     getProductColumns(
                       () => Promise.resolve(),
-                      () => {}
+                      () => { }
                     ).length
                   }
                   className="h-24 text-center text-sm"

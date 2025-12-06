@@ -1,11 +1,21 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/db/mongodb';
 import User from '@/models/User';
-import { generateSecureToken } from '@/lib/auth/utils';
+import OTP from '@/models/OTP';
+import { sendOTPEmail } from '@/lib/email/email-service';
+import connectDB from '@/lib/db/mongodb';
+import { ERROR_MESSAGES } from '@/constants';
 
+/**
+ * POST /api/auth/forgot-password
+ * Send OTP to user's email for password reset
+ */
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    await connectDB();
+
+    const body = await request.json();
+    const { email } = body;
 
     if (!email) {
       return NextResponse.json(
@@ -14,41 +24,66 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Connect to database
-    await connectDB();
-
-    // Find user
+    // Check if user exists
     const user = await User.findOne({ email });
-
-    // Don't reveal if user exists or not for security reasons
     if (!user) {
+      // Don't reveal if user exists or not (security best practice)
+      const otpDoc = await OTP.createOTP(email, 'password-reset');
+      await sendOTPEmail(email, otpDoc.otp, 'password-reset', 'Dilaara Jewelry');
       return NextResponse.json(
-        { message: 'If your email is registered, you will receive a password reset link' },
+        {
+          message: 'If an account exists with this email, you will receive a password reset code.',
+          data: { email }
+        },
         { status: 200 }
       );
     }
 
-    // Generate reset token
-    const resetToken = generateSecureToken(32);
-    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+    // Check if user registered with OAuth only (no password)
+    if (!user.passwordHash && user.googleId) {
+      return NextResponse.json(
+        { message: 'This account uses Google sign-in. Please sign in with Google instead.' },
+        { status: 400 }
+      );
+    }
 
-    // Save token to user
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpiry = resetTokenExpiry;
-    await user.save();
+    // Generate and save OTP
+    try {
+      const otpDoc = await OTP.createOTP(email, 'password-reset');
 
-    // In a real application, you would send an email with the reset link
-    // For this example, we'll just return success
-    // sendPasswordResetEmail(user.email, resetToken);
+      // Send OTP email
+      const emailSent = await sendOTPEmail(email, otpDoc.otp, 'password-reset', user.name);
 
-    return NextResponse.json(
-      { message: 'Password reset link has been sent to your email' },
-      { status: 200 }
-    );
-  } catch (error) {
+      if (!emailSent) {
+        console.error('Failed to send password reset OTP email');
+      }
+
+      return NextResponse.json(
+        {
+          message: 'Password reset code sent to your email',
+          data: {
+            email,
+            otpSent: emailSent,
+            expiresIn: 600, // 10 minutes
+          },
+        },
+        { status: 200 }
+      );
+    } catch (otpError: any) {
+      // Handle rate limiting
+      if (otpError.message.includes('Too many OTP requests')) {
+        return NextResponse.json(
+          { message: otpError.message },
+          { status: 429 }
+        );
+      }
+      throw otpError;
+    }
+
+  } catch (error: any) {
     console.error('Forgot password error:', error);
     return NextResponse.json(
-      { message: 'An error occurred. Please try again.' },
+      { message: ERROR_MESSAGES.SERVER_ERROR },
       { status: 500 }
     );
   }

@@ -32,7 +32,7 @@ const UserSchema = new Schema<IUser>(
     },
     passwordHash: {
       type: String,
-      required: [true, 'Password is required'],
+      required: false, // Optional for OAuth-only users
       minlength: [6, 'Password must be at least 6 characters'],
       select: false, // Don't include in queries by default
     },
@@ -137,6 +137,11 @@ const UserSchema = new Schema<IUser>(
       type: Date,
       select: false,
     },
+    registerBy: {
+      type: String,
+      enum: ['email', 'google', 'facebook'],
+      default: 'email',
+    }
   },
   {
     timestamps: true,

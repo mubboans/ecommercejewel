@@ -57,7 +57,10 @@ export default withAuth(
                     '/shipping',
                     '/terms',
                     '/returns',
-                    '/cancel-refund'
+                    '/cancel-refund',
+                    '/forgot-password',
+                    '/reset-password',
+                    '/verify-otp',
                 ];
 
                 // Check if current path is public

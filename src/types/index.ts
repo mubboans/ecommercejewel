@@ -46,6 +46,7 @@ export interface IUser extends Omit<Document, '_id'> {
   image?: string,
   createdAt: Date;
   updatedAt: Date;
+  registerBy?: 'email' | 'google' | 'facebook';
 }
 
 export interface IProduct extends Omit<Document, '_id'> {

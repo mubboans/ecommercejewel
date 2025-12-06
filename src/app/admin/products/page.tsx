@@ -11,12 +11,14 @@ import { PromoBanner } from "@/components/headers/promo-banner";
 import { MarqueeBanner } from "@/components/headers/marquee-banner";
 import { Footer } from "@/components/layout/footer";
 import { useRouter } from "next/navigation";
+import { DynamicBanner } from "@/components/headers/dynamic-banner";
+import { MainLayout } from "@/components/layout/main-layout";
 
 // const products = (await getProducts()) as unknown as IProduct[];
 export default function ProductsServerPage() {
   // Fetch products on server
 
- const router = useRouter();
+  const router = useRouter();
   const handleAddProduct = () => {
     router.push("/admin/products/new");
   };
@@ -35,28 +37,26 @@ export default function ProductsServerPage() {
   }
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden">
-      <Header />
-      <PromoBanner />
-      <MarqueeBanner />
-      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1 w-full">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold">Products</h1>
-          <Button asChild className="min-touch-target w-full sm:w-auto">
-            <Link href="/admin/products/new">
-              <Plus className="mr-2 h-4 w-4" /> Add Product
-            </Link>
-          </Button>
-        </div>
-        <div className="w-full overflow-hidden">
-          {/* <ProductTable
+      <MainLayout>
+        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1 w-full">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold">Products</h1>
+            <Button asChild className="min-touch-target w-full sm:w-auto">
+              <Link href="/admin/products/new">
+                <Plus className="mr-2 h-4 w-4" /> Add Product
+              </Link>
+            </Button>
+          </div>
+          <div className="w-full overflow-hidden">
+            {/* <ProductTable
             products={products}
             // onDelete={handleDelete}
             // onEdit={handleEdit}
           /> */}
-          <ProductTable onAddProduct={handleAddProduct} />
+            <ProductTable onAddProduct={handleAddProduct} />
+          </div>
         </div>
-      </div>
-      <Footer />
+      </MainLayout>
     </div>
   );
 }

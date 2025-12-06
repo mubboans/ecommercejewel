@@ -1,52 +1,88 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/db/mongodb';
+import bcrypt from 'bcryptjs';
 import User from '@/models/User';
-import { hashPassword } from '@/lib/auth/utils';
+import OTP from '@/models/OTP';
+import connectDB from '@/lib/db/mongodb';
+import { ERROR_MESSAGES } from '@/constants';
 
+/**
+ * POST /api/auth/reset-password
+ * Verify OTP and reset user's password
+ */
 export async function POST(request: NextRequest) {
   try {
-    const { token, password } = await request.json();
+    await connectDB();
 
-    if (!token || !password) {
+    const body = await request.json();
+    const { email, otp, newPassword } = body;
+
+    // Validate required fields
+    if (!email || !otp || !newPassword) {
       return NextResponse.json(
-        { message: 'Token and password are required' },
+        { message: 'Email, OTP, and new password are required' },
         { status: 400 }
       );
     }
 
-    // Connect to database
-    await connectDB();
+    // Validate password length
+    if (newPassword.length < 6) {
+      return NextResponse.json(
+        { message: 'Password must be at least 6 characters' },
+        { status: 400 }
+      );
+    }
 
-    // Find user with valid token
-    const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpiry: { $gt: Date.now() }
-    });
+    // Verify OTP
+    try {
+      await OTP.verifyOTP(email, otp, 'password-reset');
+    } catch (otpError: any) {
+      return NextResponse.json(
+        { message: otpError.message },
+        { status: 400 }
+      );
+    }
 
+    // Find user
+    const user = await User.findOne({ email });
     if (!user) {
       return NextResponse.json(
-        { message: 'Invalid or expired reset token' },
+        { message: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check if user registered with OAuth only
+    if (!user.passwordHash && user.googleId) {
+      return NextResponse.json(
+        { message: 'This account uses Google sign-in. Password reset is not available.' },
         { status: 400 }
       );
     }
 
     // Hash new password
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-    // Update user password and clear reset token
+    // Update user password
     user.passwordHash = hashedPassword;
+
+    // Clear any old reset tokens (if they exist)
     user.resetPasswordToken = undefined;
     user.resetPasswordExpiry = undefined;
+
     await user.save();
 
     return NextResponse.json(
-      { message: 'Password has been reset successfully' },
+      {
+        message: 'Password reset successful. You can now sign in with your new password.',
+      },
       { status: 200 }
     );
-  } catch (error) {
+
+  } catch (error: any) {
     console.error('Reset password error:', error);
     return NextResponse.json(
-      { message: 'An error occurred. Please try again.' },
+      { message: ERROR_MESSAGES.SERVER_ERROR },
       { status: 500 }
     );
   }
