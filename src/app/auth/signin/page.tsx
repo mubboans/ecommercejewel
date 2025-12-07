@@ -55,7 +55,7 @@ function SignInForm() {
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
 
-  const callbackUrl = searchParams.get("callbackUrl") || "/admin";
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
   const errorParam = searchParams.get("error");
 
   // Handle redirect if already authenticated - FIXED VERSION
@@ -169,7 +169,7 @@ function SignInForm() {
           <CardContent className="pt-6">
             <div className="flex flex-col items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-primary mb-2" />
-              <span>Redirecting to admin panel...</span>
+              <span>Redirecting...</span>
             </div>
           </CardContent>
         </Card>
