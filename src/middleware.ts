@@ -46,6 +46,8 @@ export default withAuth(
                     '/products',
                     '/auth/signin',
                     '/auth/signup',
+                    '/auth/forgot-password',
+                    '/auth/reset-password',
                     '/api/auth',
                     '/api/products',
                     '/about',
@@ -58,9 +60,6 @@ export default withAuth(
                     '/terms',
                     '/returns',
                     '/cancel-refund',
-                    '/forgot-password',
-                    '/reset-password',
-                    '/verify-otp',
                 ];
 
                 // Check if current path is public
